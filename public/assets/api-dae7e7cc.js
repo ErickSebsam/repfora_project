@@ -1,0 +1,1 @@
+import{W as o}from"./index-c0b3b470.js";const n=(t,s={},a={})=>o.get(t,{params:s,...a}).then(p=>p.data),c=(t,s)=>o.post(t,s).then(a=>a.data),r=(t,s)=>o.put(t,s).then(a=>a.data),d=(t,s)=>o.post(t,s);export{r as a,d as b,n as g,c as p};

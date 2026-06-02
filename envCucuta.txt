@@ -1,0 +1,46 @@
+# URL DE LA BASE DE DATOS EN MONGO ATLAS
+# The URL for the MongoDB Atlas database used by the project.
+
+
+MONGO_URL ='mongodb://multAdmin:JDHTDiizeqR7YdvB@72.60.172.138:27017/repforacedrum?authSource=admin'
+
+# COPY_DB
+# The URL for the MongoDB Atlas database used for copying data.
+COPY_DB = 'mongodb://multAdmin:JDHTDiizeqR7YdvB@72.60.172.138:27017/repforacedrum_test?authSource=admin'
+
+
+
+# PORT
+# The port number used by the project.
+PORT=3000
+
+# JWT_SECRET 
+# The secret key used for JSON Web Token (JWT) authentication.
+JWT_SECRET = 'miclaveultrasecreta123*'
+
+# SECURY_EMAIL
+# The secure email used for sending emails.
+SECURY_EMAIL = 'wkzfixqaejaimpbj'
+
+
+# FROM_EMAIL
+# The email address used as the sender for emails.
+FROM_EMAIL = 'centrocedrum@gmail.com'
+
+
+# URL_FRONTEND
+# The URL for the frontend of the project.
+URL_FRONTEND = 'http://repforacedrum.com/#'
+
+
+# TOKEN TINIFY
+TOKEN_TINI = '0Ym5wckKmx0PKg1s2ltd5ywKDgVpv8yk'
+
+
+# NAME FILE COUNT SERVICE GOOGLE 
+# CEDRUM repforacedrum-1efe398f8ff7
+
+
+GOOGLE_DRIVE_API_KEY= 'repforacedrum-1efe398f8ff7.json'
+ 
+

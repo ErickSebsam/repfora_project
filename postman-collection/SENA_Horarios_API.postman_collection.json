@@ -1,0 +1,4228 @@
+{
+  "info": {
+    "name": "SENA Horarios API",
+    "description": "Documentación completa de la API del Sistema de Horarios SENA\n\n## Autenticación\n\nLa API utiliza tokens JWT para autenticación. El token debe enviarse en el header `Authorization` o `token`.\n\n### Roles Disponibles:\n- **USER**: Usuario básico\n- **INSTRUCTOR**: Instructor del SENA\n- **PROGRAMADOR**: Programador del sistema\n- **COORDINADOR**: Coordinador de formación\n- **EVALUADOR**: Evaluador de horarios\n- **NOVEDADES**: Usuario para gestión de novedades\n- **ETAPA PRODUCTIVA**: Para etapas productivas\n- **ADMIN**: Administrador\n\n### Estructura de Respuestas:\n- **Éxito**: `{ msg: \"mensaje\", data: ... }`\n- **Error**: `{ msg: \"No fue posible terminar la operacion\" }` (status 400)\n\n### Formato de Fechas:\n- Las fechas deben enviarse en formato ISO 8601: `YYYY-MM-DDTHH:mm:ss.sssZ`\n- Horas en formato 24h: `HH:mm`\n\n### Endpoints de Monitoreo:\n- **Storage**: Monitoreo de almacenamiento de Google Drive\n  - Información de cuota y uso por sede\n  - Estados: healthy (0-49%), moderate (50-74%), warning (75-89%), critical (90-100%)\n  - Sedes disponibles: florida, sangel, bucaramanga, cucuta",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "sena-horarios-api-v1",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    }
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4500",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string",
+      "disabled": true
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth - Usuarios",
+      "item": [
+        {
+          "name": "Login Usuario",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"ADMIN\",\n  \"email\": \"usuario@sena.edu.co\",\n  \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "login"
+              ]
+            },
+            "description": "Inicia sesión de usuario.\n\n**Roles válidos:**\n- ADMIN\n- ETAPA PRODUCTIVA\n\n**Respuesta:**\n```json\n{\n  \"msg\": \"Usuario logueado correctamente\",\n  \"token\": \"jwt_token\",\n  \"email\": \"usuario@sena.edu.co\",\n  \"role\": \"ADMIN\",\n  \"name\": \"Nombre Usuario\"\n}\n```"
+          },
+          "response": []
+        },
+        {
+          "name": "Registrar Usuario",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Juan Pérez\",\n  \"email\": \"juanperez@sena.edu.co\",\n  \"password\": \"password123\",\n  \"role\": \"COORDINADOR\",\n  \"coordinations\": [\"coordination_id_1\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "register"
+              ]
+            },
+            "description": "Registra un nuevo usuario.\n\n**Roles válidos:** USER, PROGRAMADOR, COORDINADOR, CONSULTOR, EVALUADOR, NOVEDADES\n\nPara role NOVEDADES, enviar coordinations como array de IDs."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Todos los Usuarios",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            },
+            "description": "Obtiene lista de todos los usuarios (excluye super usuarios)"
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Usuario por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "user_id",
+                  "description": "ID del usuario"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar Usuario",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Juan Pérez Actualizado\",\n  \"email\": \"juanperez@sena.edu.co\",\n  \"password\": \"newpassword123\",\n  \"role\": \"COORDINADOR\",\n  \"coordinations\": [\"coordination_id\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/update/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "update",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "user_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Activar Usuario",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/active/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "active",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "user_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Inactivar Usuario",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/inactive/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "inactive",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "user_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password - Solicitar Email",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"usuario@sena.edu.co\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/resetpassword",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "resetpassword"
+              ]
+            },
+            "description": "Envía un email con el link para restablecer contraseña"
+          },
+          "response": []
+        },
+        {
+          "name": "Cambiar Password",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"nuevaPassword123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/changepassword/:token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "changepassword",
+                ":token"
+              ],
+              "variable": [
+                {
+                  "key": "token",
+                  "value": "reset_token"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Coordinadores",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/onlycoordinator",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "onlycoordinator"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Programadores",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/onlyprogrammers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "onlyprogrammers"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Instructores",
+      "item": [
+        {
+          "name": "Login Instructor",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"instructor@sena.edu.co\",\n  \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/instructors/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "instructors",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Registrar Instructor",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Carlos Instructor\",\n  \"tpdocument\": \"CC\",\n  \"numdocument\": \"12345678\",\n  \"emailpersonal\": \"personal@email.com\",\n  \"email\": \"instructor@sena.edu.co\",\n  \"phone\": \"3001234567\",\n  \"knowledge\": \"DESARROLLO DE SOFTWARE\",\n  \"thematicarea\": \"ADSO\",\n  \"bindingtype\": \"PLANTA\",\n  \"caphour\": 40,\n  \"password\": \"12345678\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/instructors/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "instructors",
+                "register"
+              ]
+            },
+            "description": "**Tipos de documento:** CC, CE, TI, PP, etc.\n**Tipo de vinculación:** PLANTA, CONTRATO, etc.\n**Password por defecto:** 12345678"
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Todos los Instructores",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/instructors",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "instructors"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Instructor por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/instructors/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "instructors",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "instructor_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar Instructor",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Carlos Instructor Actualizado\",\n  \"tpdocument\": \"CC\",\n  \"numdocument\": \"12345678\",\n  \"emailpersonal\": \"personal@email.com\",\n  \"email\": \"instructor@sena.edu.co\",\n  \"phone\": \"3001234567\",\n  \"knowledge\": \"DESARROLLO DE SOFTWARE\",\n  \"thematicarea\": \"ADSO\",\n  \"bindingtype\": \"PLANTA\",\n  \"caphour\": 40\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/instructors/update/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "instructors",
+                "update",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "instructor_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Activar Instructor",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/instructors/active/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "instructors",
+                "active",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "instructor_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Inactivar Instructor",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/instructors/inactive/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "instructors",
+                "inactive",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "instructor_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password Instructor",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"instructor@sena.edu.co\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/instructors/resetpassword",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "instructors",
+                "resetpassword"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cambiar Password Instructor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "token",
+                "value": "reset_token"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"nuevaPassword123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/instructors/changepassword",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "instructors",
+                "changepassword"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Programas de Formación",
+      "item": [
+        {
+          "name": "Registrar Programa",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"ANÁLISIS Y DESARROLLO DE SOFTWARE\",\n  \"code\": \"228100\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/programs/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "programs",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Todos los Programas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/programs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "programs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Programa por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/programs/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "programs",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "program_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar Programa",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"ANÁLISIS Y DESARROLLO DE SOFTWARE ACTUALIZADO\",\n  \"code\": \"228100\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/programs/update/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "programs",
+                "update",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "program_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Activar Programa",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/programs/active/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "programs",
+                "active",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "program_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Inactivar Programa",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/programs/inactive/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "programs",
+                "inactive",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "program_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Competencias",
+      "item": [
+        {
+          "name": "Registrar Competencia",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"CONSTRUIR SITIOS WEB\",\n  \"code\": \"C1\",\n  \"program\": \"program_id\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/competences/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "competences",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Todas las Competencias",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/competences",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "competences"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Competencia por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/competences/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "competences",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "competence_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar Competencia",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"CONSTRUIR SITIOS WEB ACTUALIZADO\",\n  \"code\": \"C1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/competences/update/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "competences",
+                "update",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "competence_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Activar Competencia",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/competences/active/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "competences",
+                "active",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "competence_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Inactivar Competencia",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/competences/inactive/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "competences",
+                "inactive",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "competence_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Resultados de Aprendizaje (Outcomes)",
+      "item": [
+        {
+          "name": "Registrar Resultado",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Elaborar sitios web applying best practices\",\n  \"code\": \"R1\",\n  \"competence\": \"competence_id\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/outcomes/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "outcomes",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Todos los Resultados",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/outcomes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "outcomes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Resultado por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/outcomes/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "outcomes",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "outcome_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar Resultado",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Elaborar sitios web actualizado\",\n  \"code\": \"R1\",\n  \"competence\": \"competence_id\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/outcomes/update/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "outcomes",
+                "update",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "outcome_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Activar Resultado",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/outcomes/active/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "outcomes",
+                "active",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "outcome_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Inactivar Resultado",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/outcomes/inactive/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "outcomes",
+                "inactive",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "outcome_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Ambientes de Formación",
+      "item": [
+        {
+          "name": "Registrar Ambiente",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"LABORATORIO DE INFORMÁTICA 1\",\n  \"code\": \"AMB-LI-001\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/environments/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "environments",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Todos los Ambientes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/environments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "environments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Ambiente por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/environments/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "environments",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "environment_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar Ambiente",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"LABORATORIO DE INFORMÁTICA 1 ACTUALIZADO\",\n  \"code\": \"AMB-LI-001\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/environments/update/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "environments",
+                "update",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "environment_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Activar Ambiente",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/environments/active/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "environments",
+                "active",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "environment_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Inactivar Ambiente",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/environments/inactive/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "environments",
+                "inactive",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "environment_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Fichas",
+      "item": [
+        {
+          "name": "Registrar Ficha",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"2281001\",\n  \"program\": \"program_id\",\n  \"owner\": \"instructor_id\",\n  \"coordination\": \"coordination_id\",\n  \"fstart\": \"2024-01-15T00:00:00.000Z\",\n  \"fend\": \"2024-12-15T00:00:00.000Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fiches/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fiches",
+                "register"
+              ]
+            },
+            "description": "**fstart**: Fecha inicio de formación\n**fend**: Fecha fin de formación\n**owner**: Instructor titular de la ficha\n**coordination**: Coordinación a la que pertenece"
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Todas las Fichas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fiches",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fiches"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Fichas Públicas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fiches/public",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fiches",
+                "public"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Fichas por Coordinación",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fiches/coordination",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fiches",
+                "coordination"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Ficha por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fiches/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fiches",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "fiche_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar Ficha",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"2281001\",\n  \"program\": \"program_id\",\n  \"owner\": \"instructor_id\",\n  \"coordination\": \"coordination_id\",\n  \"fstart\": \"2024-01-15T00:00:00.000Z\",\n  \"fend\": \"2024-12-15T00:00:00.000Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fiches/update/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fiches",
+                "update",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "fiche_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Activar Ficha",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fiches/active/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fiches",
+                "active",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "fiche_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Inactivar Ficha",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fiches/inactive/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fiches",
+                "inactive",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "fiche_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Horarios (Schedules)",
+      "item": [
+        {
+          "name": "Validar Horario (Antes de Registrar)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fiche\": \"fiche_id\",\n  \"program\": \"program_id\",\n  \"competence\": \"competence_id\",\n  \"outcome\": \"outcome_id\",\n  \"instructor\": \"instructor_id\",\n  \"environment\": \"environment_id\",\n  \"days\": [1, 3, 5],\n  \"fstart\": \"2024-02-01T00:00:00.000Z\",\n  \"fend\": \"2024-03-01T00:00:00.000Z\",\n  \"tstart\": \"07:00\",\n  \"tend\": \"10:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/schedules/validateschedule",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "schedules",
+                "validateschedule"
+              ]
+            },
+            "description": "**days**: Array de días de la semana [0=Dom, 1=Lun, 2=Mar, 3=Mié, 4=Jue, 5=Vie, 6=Sáb]\n**tstart/tend**: Formato 24h HH:mm\n\nRetorna los eventos generados para validación visual antes de guardar."
+          },
+          "response": []
+        },
+        {
+          "name": "Registrar Horario",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fiche\": \"fiche_id\",\n  \"program\": \"program_id\",\n  \"competence\": \"competence_id\",\n  \"outcome\": \"outcome_id\",\n  \"instructor\": \"instructor_id\",\n  \"supporttext\": \"APOYO DIDÁCTICO\",\n  \"observation\": \"HORARIO REGULAR\",\n  \"environment\": \"environment_id\",\n  \"days\": [1, 3, 5],\n  \"fstart\": \"2024-02-01T00:00:00.000Z\",\n  \"fend\": \"2024-03-01T00:00:00.000Z\",\n  \"tstart\": \"07:00\",\n  \"tend\": \"10:00\",\n  \"events\": [{\n    \"id\": 1,\n    \"idInstructor\": \"instructor_id\",\n    \"title\": \"Nombre Instructor\",\n    \"start\": \"2024-02-05\",\n    \"autogenerated\": true\n  }]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/schedules/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "schedules",
+                "register"
+              ]
+            },
+            "description": "**events**: Array de eventos generados por la validación previa\n**supporttext**: Texto de apoyo didáctico\n**observation**: Observaciones del horario\n\nHoras de trabajo del instructor se actualizan automáticamente."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Todos los Horarios",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/schedules",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "schedules"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Horarios por Ficha",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/schedules/fiche/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "schedules",
+                "fiche",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "fiche_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Horario por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/schedules/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "schedules",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "schedule_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Últimos 100 Horarios",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/schedules/getthundredschedules",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "schedules",
+                "getthundredschedules"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Validar Edición de Horario",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fiche\": \"fiche_id\",\n  \"program\": \"program_id\",\n  \"competence\": \"competence_id\",\n  \"outcome\": \"outcome_id\",\n  \"instructor\": \"instructor_id\",\n  \"environment\": \"environment_id\",\n  \"days\": [1, 3, 5],\n  \"fstart\": \"2024-02-01T00:00:00.000Z\",\n  \"fend\": \"2024-03-01T00:00:00.000Z\",\n  \"tstart\": \"07:00\",\n  \"tend\": \"10:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/schedules/validateeditschedule/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "schedules",
+                "validateeditschedule",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "schedule_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar Horario",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"competence\": \"competence_id\",\n  \"outcome\": \"outcome_id\",\n  \"instructor\": \"instructor_id\",\n  \"supporttext\": \"APOYO DIDÁCTICO ACTUALIZADO\",\n  \"observation\": \"HORARIO MODIFICADO\",\n  \"environment\": \"environment_id\",\n  \"days\": [1, 3, 5],\n  \"tstart\": \"07:00\",\n  \"tend\": \"10:00\",\n  \"events\": [{\n    \"id\": 1,\n    \"idInstructor\": \"instructor_id\",\n    \"title\": \"Nombre Instructor\",\n    \"start\": \"2024-02-05\",\n    \"autogenerated\": true\n  }]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/schedules/update/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "schedules",
+                "update",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "schedule_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Activar Horario",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/schedules/active/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "schedules",
+                "active",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "schedule_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Inactivar Horario",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/schedules/inactive/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "schedules",
+                "inactive",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "schedule_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar Evento del Horario",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"2024-02-05\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/schedules/deleteevent/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "schedules",
+                "deleteevent",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "schedule_id"
+                }
+              ]
+            },
+            "description": "Elimina un evento específico (fecha) del horario. Si solo queda un evento, no se puede eliminar."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Otros Horarios",
+      "item": [
+        {
+          "name": "Registrar Otro Horario",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fiche\": \"fiche_id\",\n  \"instructor\": \"instructor_id\",\n  \"environment\": \"environment_id\",\n  \"days\": [2, 4],\n  \"fstart\": \"2024-02-01T00:00:00.000Z\",\n  \"fend\": \"2024-03-01T00:00:00.000Z\",\n  \"tstart\": \"14:00\",\n  \"tend\": \"16:00\",\n  \"hours\": 2,\n  \"type\": \"SEGUIMIENTO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/othersschedules/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "othersschedules",
+                "register"
+              ]
+            },
+            "description": "**type**: Tipo de horario (SEGUIMIENTO, REUNIÓN, etc.)\n**hours**: Cantidad de horas"
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Todos los Otros Horarios",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/othersschedules",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "othersschedules"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Otro Horario por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/othersschedules/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "othersschedules",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "other_schedule_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar Otro Horario",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fiche\": \"fiche_id\",\n  \"instructor\": \"instructor_id\",\n  \"environment\": \"environment_id\",\n  \"days\": [2, 4],\n  \"fstart\": \"2024-02-01T00:00:00.000Z\",\n  \"fend\": \"2024-03-01T00:00:00.000Z\",\n  \"tstart\": \"14:00\",\n  \"tend\": \"16:00\",\n  \"hours\": 2,\n  \"type\": \"SEGUIMIENTO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/othersschedules/update/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "othersschedules",
+                "update",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "other_schedule_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Activar Otro Horario",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/othersschedules/active/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "othersschedules",
+                "active",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "other_schedule_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Inactivar Otro Horario",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/othersschedules/inactive/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "othersschedules",
+                "inactive",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "other_schedule_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Coordinaciones",
+      "item": [
+        {
+          "name": "Registrar Coordinación",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"COORDINACIÓN DE DESARROLLO SOFTWARE\",\n  \"coordinator\": \"coordinator_id\",\n  \"modality\": \"TITULADA\",\n  \"email\": \"coordinacion@example.com\",\n  \"passapp\": \"password123\",\n  \"namefoldernew\": \"folder_name\",\n  \"programmers\": [\"programmer_id_1\", \"programmer_id_2\"],\n  \"emailsupervisor\": \"supervisor@example.com\",\n  \"\": \"coordinator@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/coordinations/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "coordinations",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Todas las Coordinaciones",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/coordinations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "coordinations"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Coordinación por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/coordinations/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "coordinations",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "coordination_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar Coordinación",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"COORDINACIÓN ACTUALIZADA\",\n  \"coordinator\": \"coordinator_id\",\n  \"modality\": \"TITULADA\",\n  \"email\": \"coordinacion@example.com\",\n  \"passapp\": \"password123\",\n  \"namefoldernew\": \"folder_name\",\n  \"programmers\": [\"programmer_id_1\", \"programmer_id_2\"],\n  \"emailsupervisor\": \"supervisor@example.com\",\n  \"\": \"coordinator@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/coordinations/update/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "coordinations",
+                "update",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "coordination_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Activar Coordinación",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/coordinations/active/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "coordinations",
+                "active",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "coordination_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Inactivar Coordinación",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/coordinations/inactive/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "coordinations",
+                "inactive",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "coordination_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Ciudades (Towns)",
+      "item": [
+        {
+          "name": "Obtener Todas las Ciudades",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/towns",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "towns"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Novedades",
+      "item": [
+        {
+          "name": "Registrar Novedad",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fiches\": [\"fiche_id_1\", \"fiche_id_2\"],\n  \"instructor\": \"instructor_id\",\n  \"description\": \"Instructor incapacitado por enfermedad\",\n  \"date\": \"2024-02-10T00:00:00.000Z\",\n  \"type\": \"INCAPACIDAD\",\n  \"document\": \"documento_url\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/news/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news",
+                "register"
+              ]
+            },
+            "description": "**type**: INCAPACIDAD, PERMISO, VACACIONES, OTRO\n**document**: URL del documento soporte (opcional)"
+          },
+          "response": []
+        },
+        {
+          "name": "Registrar Novedad Pública",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "tpnew",
+                  "value": "DESERCIÓN",
+                  "type": "text",
+                  "description": "Tipo de novedad (TRASLADO, RETIRO VOLUNTARIO, REINGRESO, REINGRESO ESPECIAL, APLAZAMIENTO, DESERCIÓN)"
+                },
+                {
+                  "key": "tpdocument",
+                  "value": "CC",
+                  "type": "text",
+                  "description": "Tipo de documento (CC, TI, CE, PASAPORTE)"
+                },
+                {
+                  "key": "document",
+                  "value": "1234567890",
+                  "type": "text",
+                  "description": "Número de documento"
+                },
+                {
+                  "key": "name",
+                  "value": "Juan Pérez",
+                  "type": "text",
+                  "description": "Nombre completo"
+                },
+                {
+                  "key": "email",
+                  "value": "juan@example.com",
+                  "type": "text",
+                  "description": "Correo electrónico"
+                },
+                {
+                  "key": "phone",
+                  "value": "3101234567",
+                  "type": "text",
+                  "description": "Teléfono (10 dígitos)"
+                },
+                {
+                  "key": "fiche",
+                  "value": "64a48f2362abd793f5ce7e5b",
+                  "type": "text",
+                  "description": "ID de la ficha (MongoDB ObjectId)"
+                },
+                {
+                  "key": "datesofia",
+                  "value": "2024-02-10T00:00:00.000Z",
+                  "type": "text",
+                  "description": "Fecha de registro en SOFIA"
+                },
+                {
+                  "key": "cause",
+                  "value": "",
+                  "type": "text",
+                  "description": "Causa de la novedad (opcional)"
+                },
+                {
+                  "key": "typetransfer",
+                  "value": "",
+                  "type": "text",
+                  "description": "Tipo de traslado (requerido si tpnew es TRASLADO)",
+                  "disabled": true
+                },
+                {
+                  "key": "subtype",
+                  "value": "",
+                  "type": "text",
+                  "description": "Subtipo (requerido según tpnew)",
+                  "disabled": true
+                },
+                {
+                  "key": "workingday",
+                  "value": "",
+                  "type": "text",
+                  "description": "Jornada (requerido si typetransfer es JORANDA)",
+                  "disabled": true
+                },
+                {
+                  "key": "center",
+                  "value": "",
+                  "type": "text",
+                  "description": "Centro (requerido si typetransfer es CENTRO)",
+                  "disabled": true
+                },
+                {
+                  "key": "city",
+                  "value": "",
+                  "type": "text",
+                  "description": "Ciudad (requerido si typetransfer es CENTRO)",
+                  "disabled": true
+                },
+                {
+                  "key": "duration",
+                  "value": "",
+                  "type": "text",
+                  "description": "Duración (requerido si tpnew es APLAZAMIENTO)",
+                  "disabled": true
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": [],
+                  "description": "Archivo de imagen soporte (jpg, jpeg, png)"
+                },
+                {
+                  "key": "pdf",
+                  "type": "file",
+                  "src": [],
+                  "description": "Archivo PDF adicional (opcional)",
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/news/registerpublic",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news",
+                "registerpublic"
+              ]
+            },
+            "description": "Registra una novedad públicamente sin autenticación. Útil para que instructores reporten ausencias directamente.\n\n**Campos obligatorios:**\n- tpnew: Tipo de novedad\n- tpdocument: Tipo de documento\n- document: Número de documento\n- name: Nombre completo\n- email: Correo electrónico\n- phone: Teléfono (10 dígitos)\n- fiche: ID de la ficha\n- datesofia: Fecha de registro\n- file: Archivo de imagen (jpg, jpeg, png)\n\n**Campos opcionales (según tipo de novedad):**\n- cause: Causa\n- typetransfer, subtype, workingday, center, city: Para TRASLADO\n- duration: Para APLAZAMIENTO\n- pdf: Archivo PDF adicional"
+          },
+          "response": []
+        },
+        {
+          "name": "Registrar Mejora",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fiches\": [\"fiche_id\"],\n  \"instructor\": \"instructor_id\",\n  \"description\": \"Actividad de mejora pendiente\",\n  \"date\": \"2024-02-10T00:00:00.000Z\",\n  \"document\": \"documento_url\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/news/registerimprovement",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news",
+                "registerimprovement"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Todas las Novedades",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/news",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Novedades Procesadas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/news/onlyprocessed",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news",
+                "onlyprocessed"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Novedades Procesadas con Acta Null",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/news/onlyprocessedactanull",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news",
+                "onlyprocessedactanull"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Mejoras",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/news/onlyimprovement",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news",
+                "onlyimprovement"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Novedades por Instructor",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/news/newbyinstructor/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news",
+                "newbyinstructor",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "instructor_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Items por Ficha",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/news/fiche/:fiche/items",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news",
+                "fiche",
+                ":fiche",
+                "items"
+              ],
+              "variable": [
+                {
+                  "key": "fiche",
+                  "value": "fiche_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Novedad por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/news/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "new_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar Novedad",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fiches\": [\"fiche_id\"],\n  \"instructor\": \"instructor_id\",\n  \"description\": \"Descripción actualizada\",\n  \"date\": \"2024-02-10T00:00:00.000Z\",\n  \"type\": \"INCAPACIDAD\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/news/update/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news",
+                "update",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "new_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar Novedad Avanzada",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"RESUELTA\",\n  \"response\": \"Novedad resuelta satisfactoriamente\",\n  \"statusAudit\": \"COMPLETADO\",\n  \"priority\": \"ALTA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/news/updateadvanced/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news",
+                "updateadvanced",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "new_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar Múltiples Novedades",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"news\": [\"new_id_1\", \"new_id_2\"],\n  \"status\": \"PROCESADA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/news/updatemultiple",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news",
+                "updatemultiple"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mejorar o Posponer Novedades",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"news\": [\"new_id_1\", \"new_id_2\"],\n  \"action\": \"MEJORAR\",\n  \"observation\": \"Se debe mejorar la documentación\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/news/upgradepostpone",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news",
+                "upgradepostpone"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar Mejora",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fiches\": [\"fiche_id\"],\n  \"instructor\": \"instructor_id\",\n  \"description\": \"Mejora actualizada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/news/updateimprovement/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news",
+                "updateimprovement",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "improvement_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Aprobar Novedad",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"response\": \"Novedad aprobada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/news/aprovenew/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news",
+                "aprovenew",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "new_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rechazar Novedad",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"response\": \"Novedad rechazada por documentación incompleta\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/news/notaprovenew/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news",
+                "notaprovenew",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "new_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Activar Novedad",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/news/active/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news",
+                "active",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "new_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Inactivar Novedad",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/news/inactive/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news",
+                "inactive",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "new_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Enviar Email de Mejora",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/news/sendemail/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news",
+                "sendemail",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "improvement_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Reportes",
+      "item": [
+        {
+          "name": "Crear Informe",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fiches\": [\"fiche_id_1\", \"fiche_id_2\"],\n  \"coordination\": \"coordination_id\",\n  \"program\": \"program_id\",\n  \"competence\": \"competence_id\",\n  \"outcome\": \"outcome_id\",\n  \"instructor\": \"instructor_id\",\n  \"environment\": \"environment_id\",\n  \"datestart\": \"2024-01-01T00:00:00.000Z\",\n  \"dateend\": \"2024-12-31T23:59:59.000Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reports"
+              ]
+            },
+            "description": "Genera un informe con los filtros especificados. Todos los filtros son opcionales."
+          },
+          "response": []
+        },
+        {
+          "name": "Enviar Informe por Email",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fiches\": [\"fiche_id\"],\n  \"coordination\": \"coordination_id\",\n  \"datestart\": \"2024-01-01T00:00:00.000Z\",\n  \"dateend\": \"2024-12-31T23:59:59.000Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/sendreport",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reports",
+                "sendreport"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Crear Informe de Instructor",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"instructor\": \"instructor_id\",\n  \"coordination\": \"coordination_id\",\n  \"datestart\": \"2024-01-01T00:00:00.000Z\",\n  \"dateend\": \"2024-12-31T23:59:59.000Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/instructor",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reports",
+                "instructor"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Crear Informe de Ambiente",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"environment\": \"environment_id\",\n  \"coordination\": \"coordination_id\",\n  \"datestart\": \"2024-01-01T00:00:00.000Z\",\n  \"dateend\": \"2024-12-31T23:59:59.000Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/environment",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reports",
+                "environment"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Validar Respuesta de Instructor",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"report_id\",\n  \"response\": \"ACEPTADA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/validateinst",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reports",
+                "validateinst"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Validar Respuesta de Ficha",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"report_id\",\n  \"response\": \"PROCESADA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/validatefiche",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reports",
+                "validatefiche"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Crear Informe Temporal",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"filters\": {}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/reporttemp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reports",
+                "reporttemp"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Probar Email Gmail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/testemail",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reports",
+                "testemail"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Probar Email Microsoft",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/testemailmicrosoft",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reports",
+                "testemailmicrosoft"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reporte Horas de Instructores",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fecha\": \"2024-02-10T00:00:00.000Z\",\n  \"hora\": \"07:00\",\n  \"ficha\": \"fiche_id\",\n  \"schedule\": \"schedule_id\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/hoursinstructors",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reports",
+                "hoursinstructors"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Auditoría",
+      "item": [
+        {
+          "name": "Obtener Estado Actual",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auditoria/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auditoria",
+                "estado"
+              ]
+            },
+            "description": "Retorna el estado actual de auditoría con pendientes y vencidos"
+          },
+          "response": []
+        },
+        {
+          "name": "Limpiar Estado Actual",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auditoria/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auditoria",
+                "estado"
+              ]
+            },
+            "description": "Fuerza la recarga del estado de auditoría"
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Vencidos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auditoria/vencidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auditoria",
+                "vencidos"
+              ]
+            },
+            "description": "Retorna reporte de horarios vencidos"
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Vencidos Agrupados",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auditoria/vencidos/agrupados",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auditoria",
+                "vencidos",
+                "agrupados"
+              ]
+            },
+            "description": "Retorna vencidos agrupados por ficha"
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Vencidos por Coordinación",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auditoria/vencidos/coordinacion/:coordinationId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auditoria",
+                "vencidos",
+                "coordinacion",
+                ":coordinationId"
+              ],
+              "variable": [
+                {
+                  "key": "coordinationId",
+                  "value": "coordination_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Agregar Omisión de Aprendiz",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scheduleId\": \"schedule_id\",\n  \"learnerDocument\": \"12345678\",\n  \"learnerName\": \"Juan Aprendiz\",\n  \"reason\": \"Estudiante enfermo\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auditoria/omisiones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auditoria",
+                "omisiones"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Omisiones Agrupadas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auditoria/omisiones/agrupadas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auditoria",
+                "omisiones",
+                "agrupadas"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Omisiones por Schedule",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auditoria/omisiones/:scheduleId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auditoria",
+                "omisiones",
+                ":scheduleId"
+              ],
+              "variable": [
+                {
+                  "key": "scheduleId",
+                  "value": "schedule_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar Omisión de Aprendiz",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auditoria/omisiones/:scheduleId/:learnerDocument",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auditoria",
+                "omisiones",
+                ":scheduleId",
+                ":learnerDocument"
+              ],
+              "variable": [
+                {
+                  "key": "scheduleId",
+                  "value": "schedule_id"
+                },
+                {
+                  "key": "learnerDocument",
+                  "value": "12345678"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Historial de Auditorías",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auditoria/historial",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auditoria",
+                "historial"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Coordinaciones Disponibles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auditoria/coordinaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auditoria",
+                "coordinaciones"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Estado del Cron de Auditoría",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auditoria/cron/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auditoria",
+                "cron",
+                "status"
+              ]
+            },
+            "description": "Retorna si el cron automático de auditoría está activo o inactivo"
+          },
+          "response": []
+        },
+        {
+          "name": "Activar/Desactivar Cron de Auditoría",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enabled\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auditoria/cron/toggle",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auditoria",
+                "cron",
+                "toggle"
+              ]
+            },
+            "description": "Activa (true) o desactiva (false) el cron automático de auditoría"
+          },
+          "response": []
+        },
+        {
+          "name": "Ejecutar Auditoría Manualmente",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auditoria/cron/run",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auditoria",
+                "cron",
+                "run"
+              ]
+            },
+            "description": "Ejecuta el proceso de auditoría de forma inmediata sin esperar al cron programado. Retorna 409 si ya hay una ejecución en curso."
+          },
+          "response": []
+        },
+        {
+          "name": "Estado de Notificaciones por Email",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auditoria/email/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auditoria",
+                "email",
+                "status"
+              ]
+            },
+            "description": "Retorna si las notificaciones por correo electrónico están habilitadas o deshabilitadas"
+          },
+          "response": []
+        },
+        {
+          "name": "Activar/Desactivar Notificaciones por Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enabled\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auditoria/email/toggle",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auditoria",
+                "email",
+                "toggle"
+              ]
+            },
+            "description": "Activa (true) o desactiva (false) las notificaciones por correo electrónico del proceso de auditoría"
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Fichas Excluidas de Auditoría",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auditoria/fiches/excluded",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auditoria",
+                "fiches",
+                "excluded"
+              ]
+            },
+            "description": "Retorna las fichas omitidas que no serán procesadas por el cron de auditoría"
+          },
+          "response": []
+        },
+        {
+          "name": "Excluir Ficha de Auditoría",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ficheNumber\": \"2451837\",\n  \"reason\": \"No existe en Sofía Plus\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auditoria/fiches/exclude",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auditoria",
+                "fiches",
+                "exclude"
+              ]
+            },
+            "description": "Registra una ficha como omitida para que no sea procesada por el cron de auditoría"
+          },
+          "response": []
+        },
+        {
+          "name": "Reincluir Ficha en Auditoría",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ficheNumber\": \"2451837\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auditoria/fiches/include",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auditoria",
+                "fiches",
+                "include"
+              ]
+            },
+            "description": "Elimina la omisión de una ficha para que vuelva a ser procesada por el cron de auditoría"
+          },
+          "response": []
+        },
+        {
+          "name": "Resumen Sede (RESUMEN SEDE)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auditoria/resumen-sede",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auditoria",
+                "resumen-sede"
+              ]
+            },
+            "description": "Devuelve el resumen del run más reciente con categorías AL DÍA, AÚN NO VENCE, SNC PARCIAL, SNC CRÍTICO y SIN PROGRAMAR por ficha. Requiere token de autenticación."
+          },
+          "response": []
+        },
+        {
+          "name": "Descargar Resumen Sede (Excel)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auditoria/resumen-sede/excel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auditoria",
+                "resumen-sede",
+                "excel"
+              ]
+            },
+            "description": "Genera y descarga el RESUMEN SEDE como archivo XLSX en el mismo formato que el reporte manual de diagnóstico. Requiere token de autenticación."
+          },
+          "response": []
+        },
+        {
+          "name": "Comparación entre Barridos",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auditoria/comparacion",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auditoria",
+                "comparacion"
+              ]
+            },
+            "description": "Compara los 2 últimos runs de auditoría. Muestra qué fichas mejoraron, empeoraron, se resolvieron o son nuevas entre barridos. Requiere token de autenticación."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Archivos (Uploads)",
+      "item": [
+        {
+          "name": "Subir Archivo Excel",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "/path/to/file.xlsx"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/uploads/excel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "uploads",
+                "excel"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Subir Imagen",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "/path/to/image.jpg"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/uploads/image",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "uploads",
+                "image"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Backup de Base de Datos",
+      "item": [
+        {
+          "name": "Obtener Todos los Respaldos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/backupdatabase",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "backupdatabase"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Crear Respaldo",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/backupdatabase",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "backupdatabase"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar Respaldo",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/backupdatabase/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "backupdatabase",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "backup_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Bitácora (Binnacle)",
+      "item": [
+        {
+          "name": "Obtener Bitácora",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/binnacle",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "binnacle"
+              ]
+            },
+            "description": "Retorna el registro de acciones realizadas en el sistema"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Registro Diario de Auditoría",
+      "item": [
+        {
+          "name": "Obtener Registros de Auditoría",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auditlog",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auditlog"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Registros por Fecha",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auditlog/date/:date",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auditlog",
+                "date",
+                ":date"
+              ],
+              "variable": [
+                {
+                  "key": "date",
+                  "value": "2024-02-10"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Omisiones de Aprendiz",
+      "item": [
+        {
+          "name": "Obtener Todas las Omisiones",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/learneromission",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "learneromission"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Omisiones por Schedule",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/learneromission/schedule/:scheduleId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "learneromission",
+                "schedule",
+                ":scheduleId"
+              ],
+              "variable": [
+                {
+                  "key": "scheduleId",
+                  "value": "schedule_id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Registrar Omisión de Aprendiz",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scheduleId\": \"schedule_id\",\n  \"learnerDocument\": \"12345678\",\n  \"learnerName\": \"Juan Aprendiz\",\n  \"reason\": \"Estudiante enfermo\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/learneromission",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "learneromission"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar Omisión de Aprendiz",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/learneromission/:scheduleId/:learnerDocument",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "learneromission",
+                ":scheduleId",
+                ":learnerDocument"
+              ],
+              "variable": [
+                {
+                  "key": "scheduleId",
+                  "value": "schedule_id"
+                },
+                {
+                  "key": "learnerDocument",
+                  "value": "12345678"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Tareas Programadas (Cron)",
+      "item": [
+        {
+          "name": "Ejecutar Auditoría Programada",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/cron",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cron"
+              ]
+            },
+            "description": "Ejecuta manualmente el proceso de auditoría programado"
+          },
+          "response": []
+        },
+        {
+          "name": "Ejecutar Auditoría en Modo Debug",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/cron/debug?skipEmail=true&skipMarkRated=true&skipSaveLog=true&maxFiches=5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cron",
+                "debug"
+              ],
+              "query": [
+                {
+                  "key": "skipEmail",
+                  "value": "true",
+                  "description": "No enviar emails"
+                },
+                {
+                  "key": "skipMarkRated",
+                  "value": "true",
+                  "description": "No marcar como calificado"
+                },
+                {
+                  "key": "skipSaveLog",
+                  "value": "true",
+                  "description": "No guardar log"
+                },
+                {
+                  "key": "maxFiches",
+                  "value": "5",
+                  "description": "Máximo de fichas a procesar"
+                },
+                {
+                  "key": "ficheId",
+                  "value": "",
+                  "description": "ID de ficha específica (opcional)",
+                  "disabled": true
+                },
+                {
+                  "key": "localReportPath",
+                  "value": "",
+                  "description": "Ruta de reporte local (opcional)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Ejecuta auditoría en modo debug con opciones de prueba"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Monitoreo de Almacenamiento (Storage)",
+      "item": [
+        {
+          "name": "Obtener Información de Todas las Sedes",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/storage",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "storage"
+              ]
+            },
+            "description": "⚠️ **REQUIERE SUPER ADMIN (super=1)** - Retorna información completa de almacenamiento de todas las sedes (Florida, San Gil, Bucaramanga, Cúcuta). Incluye resumen general, detalles por sede, porcentajes de uso y archivos más grandes.\n\n**Requiere token de autenticación de usuario con super=1**"
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Resumen Ejecutivo",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/storage/summary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "storage",
+                "summary"
+              ]
+            },
+            "description": "⚠️ **REQUIERE SUPER ADMIN (super=1)** - Retorna un resumen ejecutivo con recomendaciones automáticas. Incluye estado de cada sede (healthy/moderate/warning/critical) y alertas si alguna supera el 75% de uso.\n\n**Requiere token de autenticación de usuario con super=1**"
+          },
+          "response": []
+        },
+        {
+          "name": "Verificar Credencial Específica (Advertencias)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"credentialFile\": \"repfora-411414-2b1a696cee9c.json\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/storage/check",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "storage",
+                "check"
+              ]
+            },
+            "description": "⚠️ **REQUIERE SUPER ADMIN (super=1)** - Verifica cualquier credencial de Google Drive SIN cambiar el .env y devuelve advertencias si el almacenamiento se está llenando. Ideal para verificar múltiples credenciales rápidamente sin reiniciar el servidor.\n\n**Parámetros:**\n- `credentialFile`: Nombre del archivo JSON (ej: repfora-411414-2b1a696cee9c.json)\n\n**Retorna:**\n- Porcentaje de uso\n- Estado (healthy/moderate/warning/critical)\n- Alertas si supera 75%\n- Top 5 archivos más grandes\n- Recomendaciones automáticas\n\n**Archivos disponibles:**\n- repfora-411414-2b1a696cee9c.json (Florida)\n- repfora-c966104279a7.json (San Gil)\n- repforacset-5a173bf4e06e.json (Bucaramanga)\n- repforacedrum-1efe398f8ff7.json (Cúcuta)\n\n**Requiere token de autenticación de usuario con super=1**"
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Información de Sede Específica",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/storage/:sede",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "storage",
+                ":sede"
+              ],
+              "variable": [
+                {
+                  "key": "sede",
+                  "value": "florida",
+                  "description": "Código de la sede: florida, sangel, bucaramanga, cucuta"
+                }
+              ]
+            },
+            "description": "⚠️ **REQUIERE SUPER ADMIN (super=1)** - Retorna información detallada de una sede específica: cuota de almacenamiento, porcentaje de uso, archivos más grandes y service account utilizada.\n\n**Requiere token de autenticación de usuario con super=1**"
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Archivos Más Grandes de Sede",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/storage/:sede/files?limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "storage",
+                ":sede",
+                "files"
+              ],
+              "variable": [
+                {
+                  "key": "sede",
+                  "value": "florida",
+                  "description": "Código de la sede: florida, sangel, bucaramanga, cucuta"
+                }
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Número máximo de archivos a retornar (default: 20)"
+                }
+              ]
+            },
+            "description": "⚠️ **REQUIERE SUPER ADMIN (super=1)** - Retorna los archivos más grandes de una sede, ordenados por tamaño. Útil para identificar archivos que están consumiendo más espacio y pueden ser eliminados.\n\n**Requiere token de autenticación de usuario con super=1**"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Life Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/life",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "life"
+              ]
+            },
+            "description": "Endpoint para verificar que el servidor está activo"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

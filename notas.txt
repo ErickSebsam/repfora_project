@@ -1,0 +1,3 @@
+{{url}}/api/cron/debug?localReportPath=./downloads/archivo.xls&ficheId=67040b5c71e7d8e0b4b722ca&skipSaveLog=false
+
+npm run docs:generate

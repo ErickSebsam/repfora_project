@@ -1,0 +1,58 @@
+name: Sync y Deploy
+
+on:
+  push:
+    branches: [frontend, backend]
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configurar Git
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          
+
+      # ─── FRONTEND ───────────────────────────────────────────────
+      - name: Build Vue
+        if: github.ref_name == 'frontend'
+        run: |
+          npm install
+          npm run build
+
+      - name: Copiar dist a main/public
+        if: github.ref_name == 'frontend'
+        run: |
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+          git checkout main
+          rm -rf public/*
+          cp -r dist/* public/
+          git add public/
+          git diff --staged --quiet || git commit -m "sync: build frontend → main/public"
+          git push origin main
+
+      # ─── BACKEND ────────────────────────────────────────────────
+      - name: Sync backend a main
+        if: github.ref_name == 'backend'
+        run: |
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+          git checkout main
+
+          # Traer archivos del backend UNO POR UNO, sin merge
+          git checkout origin/backend -- .
+
+          # Restaurar public/ desde main para no pisarlo
+          git checkout HEAD -- public/ || true
+
+          git add -A
+          git diff --staged --quiet || git commit -m "sync: backend → main"
+          git push origin main

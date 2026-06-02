@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Plantilla Correo SENA</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 40px; background: #f5f5f5; }
+    .preview { max-width: 700px; margin: 0 auto; background: white; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body>
+  <h2 style="text-align: center; color: #333;">Vista Previa del Correo a Instructores</h2>
+
+  <div class="preview">
+    <p>Estimado(a) <strong>MIGUEL ANGEL GONZALEZ</strong>:</p>
+
+    <p>Reciba un cordial saludo.</p>
+
+    <p>Teniendo en cuenta la revisión de Juicios Evaluativos de la ficha <strong>2504381</strong>, se encuentra por evaluar el(los) resultado(s):</p>
+
+    <p style="background: #f8f9fa; padding: 15px; border-left: 4px solid #0056b3; margin: 15px 0;">
+      • ANALIZAR LOS COMPONENTES DE LA COMUNICACIÓN ALTERNATIVA<br>
+      • CODIFICAR EL SOFTWARE DE ACUERDO CON EL DISEÑO ESTABLECIDO
+    </p>
+
+    <p>Considerando los compromisos funcionales y/o obligaciones contractuales:</p>
+
+    <p>Registrar, verificar y hacer seguimiento oportuno en el sistema de información que la entidad defina para la Gestión de la Formación Profesional Integral mediante las siguientes actividades:</p>
+
+    <ul style="line-height: 1.8;">
+      <li>a) Verificando que la totalidad de los aprendices seleccionados y matriculados queden en ese estado.</li>
+      <li>b) Registrando juicios evaluativos del reconocimiento de aprendizajes previos, los juicios evaluativos, rutas de aprendizaje, para los beneficiarios nuevos, reintegrados o trasladados.</li>
+      <li>e) Comunicando al Coordinador Académico oportunamente anomalías, inconsistencias, novedades de aprendices y hallazgos en el registro de la información.</li>
+    </ul>
+
+    <p>Las demás necesarias para el cabal cumplimiento del objeto contractual.</p>
+
+    <p>De forma atenta y respetuosa, le solicito realizar la emisión de los correspondientes juicios evaluativos pendientes a la mayor brevedad y verificar que los mismos cumplan con los criterios de calidad y pertinencia requeridos.</p>
+
+    <p>Le agradecería confirmar mediante correo electrónico una vez haya realizado esta actividad.</p>
+
+    <p>Agradezco su atención y reitero la importancia de emitir los juicios evaluativos a la mayor brevedad posible.</p>
+
+    <div style="margin-top: 40px; border-top: 2px solid #39A900; padding-top: 15px;">
+      <p style="margin: 0; color: #39A900; font-weight: bold;">SENA</p>
+      <p style="margin: 5px 0;">Sistema de Gestión de la Calidad</p>
+      <p style="margin: 5px 0; color: #666; font-size: 12px;">martes, 6 de enero de 2026, 10:30 a. m.</p>
+    </div>
+  </div>
+
+  <hr style="margin: 40px 0; border: none; border-top: 1px solid #ddd;">
+
+  <h3 style="color: #333;">Características del envío:</h3>
+  <ul style="line-height: 1.6;">
+    <li><strong>From (remitente):</strong> El correo de la COORDINACIÓN asociada a la ficha (coordination.email)</li>
+    <li><strong>Contraseña:</strong> coordination.passapp de la coordinación</li>
+    <li><strong>To (destinatario):</strong> El email del instructor del schedule</li>
+    <li><strong>Subject (asunto):</strong> "Pendientes de Calificación - Ficha [NÚMERO]"</li>
+  </ul>
+
+  <p style="color: #666; font-size: 14px;"><em>Nota: Si la coordinación no tiene email/passapp, se usará EMAIL_USER/EMAIL_PASS de las variables de entorno como fallback.</em></p>
+</body>
+</html>

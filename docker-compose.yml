@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: horarios_sena_app
+    restart: unless-stopped
+    ports:
+      - "4500:4500"
+    environment:
+      - PORT=4500
+      - MONGO_URL=mongodb://mongo:27017/Horarios_SENA
+      - NODE_ENV=production
+    env_file:
+      - .env
+    volumes:
+      # Mount directories for persistent storage
+      - ./public:/app/public
+      - ./downloads:/app/downloads
+      - ./tmp:/app/tmp
+      - ./clients:/app/clients
+    depends_on:
+      - mongo
+    networks:
+      - horarios_network
+
+  mongo:
+    image: mongo:7
+    container_name: horarios_sena_mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=admin123
+      - MONGO_INITDB_DATABASE=Horarios_SENA
+    volumes:
+      - mongo_data:/data/db
+      - mongo_config:/data/configdb
+    networks:
+      - horarios_network
+
+volumes:
+  mongo_data:
+    driver: local
+  mongo_config:
+    driver: local
+
+networks:
+  horarios_network:
+    driver: bridge

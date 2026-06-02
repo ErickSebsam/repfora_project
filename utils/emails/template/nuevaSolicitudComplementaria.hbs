@@ -1,0 +1,61 @@
+<html>
+  <head>
+    <style>
+      .container { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333; }
+      .header { background-color: #1976d2; color: #fff; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+      .body { padding: 20px; background-color: #f9f9f9; }
+      .detail-row { display: flex; padding: 8px 0; border-bottom: 1px solid #e0e0e0; }
+      .detail-label { font-weight: bold; width: 40%; color: #555; }
+      .detail-value { width: 60%; }
+      .footer { padding: 15px 20px; background-color: #e3f2fd; font-size: 12px; color: #666; border-radius: 0 0 8px 8px; text-align: center; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h2>Nueva Solicitud de Complementaria</h2>
+      </div>
+      <div class="body">
+        <p>Cordial saludo, <strong>{{coordinatorName}}</strong></p>
+        <p>Se ha registrado una nueva solicitud de formacion complementaria por parte del instructor <strong>{{instructorName}}</strong>.</p>
+        <h3>Detalles de la solicitud:</h3>
+        <div class="detail-row">
+          <span class="detail-label">Curso:</span>
+          <span class="detail-value">{{courseName}}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Codigo:</span>
+          <span class="detail-value">{{courseCode}}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Version:</span>
+          <span class="detail-value">{{courseVersion}}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Instructor:</span>
+          <span class="detail-value">{{instructorName}}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Fecha de solicitud:</span>
+          <span class="detail-value">{{requestDate}}</span>
+        </div>
+        {{#if municipio}}
+        <div class="detail-row">
+          <span class="detail-label">Municipio:</span>
+          <span class="detail-value">{{municipio}}</span>
+        </div>
+        {{/if}}
+        {{#if numAprendices}}
+        <div class="detail-row">
+          <span class="detail-label">No. Aprendices:</span>
+          <span class="detail-value">{{numAprendices}}</span>
+        </div>
+        {{/if}}
+        <p>Por favor ingrese al sistema para revisar y aprobar o rechazar la solicitud.</p>
+      </div>
+      <div class="footer">
+        Este mensaje fue enviado automaticamente por el sistema REPORA - SENA. No responda a este correo.
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,32 @@
+MONGO_URL='mongodb://multAdmin:JDHTDiizeqR7YdvB@89.116.49.65:27017/Horarios_SENA'
+COPY_DB='mongodb+srv://adminHSENA:CDb8lJoGBSVGEnIG@cluster0.cckpzpd.mongodb.net/Horarios_SENA_test'
+PORT=4500
+JWT_SECRET='miclaveultrasecreta123*'
+SECURY_EMAIL='gbwlavympvowhttk'
+FROM_EMAIL='senapruebas123@gmail.com'
+URL_FRONTEND='http://repforacat.com/#'
+URL_SERVER='http://repforacat.com/api'
+
+# TOKEN TINIFY
+#TOKEN_TINI='0Ym5wckKmx0PKg1s2ltd5ywKDgVpv8yk'
+GOOGLE_DRIVE_API_KEY='repfora-c966104279a7.json'
+
+
+#SOFIA AUDITORIA JUICIOS PENDIENTES POR CALIFICAR
+SOFIA_URL=http://senasofiaplus.edu.co/sofia-public/
+SOFIA_USER=91075016
+SOFIA_PASS=11123456789Johon**
+SOFIA_RETRY_DELAY=60000
+MAX_GROUPS_TO_PROCESS=10
+OUTPUTDIR=./downloads
+CRON_ENABLED=false
+EMAIL_ENABLED=true
+#RECORDAR PASAR HEADLES A TRUE EN PRODUCCION
+HEADLESS=true
+
+#PRUEBAS CORREO ELECTRONICO
+TEST_MAIL_RECIPIENT=migueldulceyd@gmail.com
+USE_TEST_RECIPIENT=true
+
+#opc ALMACENAMIENTO - DRIVE o LOCAL
+STORAGE_TYPE=local
