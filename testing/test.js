@@ -34,7 +34,7 @@ const extraerContactoSofia = async () => {
 
     console.log('[SOFIA] Llenando credenciales de acceso...');
     await loginFrame.waitForSelector('input#username');
-    await loginFrame.selectOption('select[name="select"]', 'TI');
+    await loginFrame.selectOption('select[name="select"]', 'CC');
     await loginFrame.fill('input#username', process.env.SOFIA_USER);
     await loginFrame.fill('input[name="josso_password"]', process.env.SOFIA_PASS);
 
