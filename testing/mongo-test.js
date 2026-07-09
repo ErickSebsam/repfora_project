@@ -9,33 +9,19 @@ async function obtenerProgramacion() {
         mongoose.connection.db;
 
     // =====================================
-    // INFO DB
+    // DIAGNÓSTICO
     // =====================================
 
     console.log(
-        '\n🗂️ DATABASE:\n'
+        '🗂️ Base de datos conectada:', db.databaseName
     );
+
+    const nombresColecciones =
+        (await db.listCollections().toArray()).map(c => c.name);
 
     console.log(
-        db.databaseName
+        '📚 Colecciones encontradas:', nombresColecciones
     );
-
-    // =====================================
-    // COLLECTIONS
-    // =====================================
-
-    const collections =
-        await db
-            .listCollections()
-            .toArray();
-
-    console.log(
-        '\n📚 COLLECTIONS:\n'
-    );
-
-    collections.forEach(col => {
-        console.log(`- ${col.name}`);
-    });
 
     // =====================================
     // COLLECTIONS USADAS
@@ -50,23 +36,26 @@ async function obtenerProgramacion() {
     const environments =
         db.collection('environments');
 
+    const instructors =
+        db.collection('instructors');
+
+    console.log(
+        '🔢 Documentos en schedules:', await schedules.countDocuments()
+    );
+
     // =====================================
     // PRIMER SCHEDULE
     // =====================================
+    // (luego esto se cambia por el filtro de RF06:
+    // { $or: [ { estado: { $exists: false } }, { estado: false } ] })
 
     const schedule =
         await schedules.findOne();
 
-    console.log(
-        '\n📦 PRIMER SCHEDULE:\n'
-    );
-
-    console.log(schedule);
-
     if (!schedule) {
-
         throw new Error(
-            'No se encontró programación'
+            `No se encontró programación en la base "${db.databaseName}". ` +
+            'Revisa que el MONGO_URL apunte a "Horarios_SENA" y no a "test".'
         );
     }
 
@@ -79,12 +68,6 @@ async function obtenerProgramacion() {
             _id: schedule.fiche
         });
 
-    console.log(
-        '\n🎓 FICHA:\n'
-    );
-
-    console.log(fiche);
-
     // =====================================
     // AMBIENTE
     // =====================================
@@ -94,20 +77,31 @@ async function obtenerProgramacion() {
             _id: schedule.environment
         });
 
-    console.log(
-        '\n🏫 AMBIENTE:\n'
-    );
-
-    console.log(environment);
-
     // =====================================
-    // OBJETO FINAL
+    // INSTRUCTOR
     // =====================================
 
-    const datos = {
+    const instructor =
+        await instructors.findOne({
+            _id: schedule.instructor
+        });
+
+    // =====================================
+    // APRENDICES
+    // =====================================
+    // Pendiente: no existe colección "learners" en la base de datos
+    // actual (Horarios_SENA). Los aprendices se deben obtener desde
+    // Sofia Plus (búsqueda por número de ficha) o crear una colección
+    // que los almacene, antes de poder completar este campo.
+
+    // =====================================
+    // OBJETO FINAL (JSON)
+    // =====================================
+
+    const datosEvento = {
 
         ficha:
-            fiche?.code || '',
+            fiche?.number || '',
 
         ambiente:
             environment?.name || '',
@@ -125,16 +119,18 @@ async function obtenerProgramacion() {
             schedule.tend,
 
         dias:
-            schedule.days
+            schedule.days,
+
+        instructor: instructor ? {
+            nombre: instructor.name,
+            documento: instructor.numdocument,
+            email: instructor.email
+        } : null,
+
+        aprendices: [] // TODO: pendiente por definir fuente (ver nota arriba)
     };
 
-    console.log(
-        '\n🚀 DATOS FINALES:\n'
-    );
-
-    console.log(datos);
-
-    return datos;
+    return datosEvento;
 }
 
 // =====================================
@@ -146,21 +142,28 @@ async function main() {
     try {
 
         console.log(
-            process.env.MONGO_URL
-        );
-
-        console.log(
             '\n🍃 Conectando Mongo...\n'
         );
 
         await mongoose.connect(
             process.env.MONGO_URL,
+            { dbName: 'Horarios_SENA' }
         );
 
         console.log(
             '✅ Mongo conectado\n'
         );
-        await obtenerProgramacion();
+
+        const datosEvento =
+            await obtenerProgramacion();
+
+        console.log(
+            '\n🚀 DATOS DEL EVENTO (JSON):\n'
+        );
+
+        console.log(
+            JSON.stringify(datosEvento, null, 2)
+        );
 
     } catch (error) {
 
