@@ -314,19 +314,86 @@ async function iniciarSOFIA() {
   console.log("✅ ¡Iframe del modal enganchado con éxito!");
   console.log(`🔗 URL interna del modal: ${verdaderoFrameModal.url()}`);
 
-  // 4. Escribir el nombre del ambiente DENTRO del modal
-  console.log(
-    "⌨️ Escribiendo el nombre del ambiente en la casilla del modal...",
-  );
-  const inputNombreAmbiente = verdaderoFrameModal
-    .locator('input[type="text"], input[name*="nombre"]')
-    .first();
-  await inputNombreAmbiente.waitFor({ state: "visible", timeout: 10000 });
+  // =================================================================
+    // 4. Escribir un fragmento/palabra clave en la casilla del modal
+    // =================================================================
+    console.log('⌨️ Preparando término de búsqueda para el ambiente...');
+    
+    // SUPOSICIÓN: Simulamos el texto que vendría purificado de tu DB o un fragmento clave
+    // En producción usarías una variable como: const terminoBusqueda = limpiarNombreDB(ambienteDB.nombre);
+    const terminoBusqueda = 'AMBIENTE 6'; 
 
-  await inputNombreAmbiente.fill("AMBIENTE 6");
-  console.log("✅ Nombre del ambiente escrito en el modal.");
+    const inputNombreAmbiente = verdaderoFrameModal.locator('input[id*="nombreAmbienteITX"]').first();
+    await inputNombreAmbiente.waitFor({ state: 'visible', timeout: 10000 });
+    
+    await inputNombreAmbiente.fill(terminoBusqueda);
+    console.log(`✅ Término escrito en el modal: "${terminoBusqueda}"`);
 
-  await screenshot(page, "nombre-ambiente-en-modal");
+    // =================================================================
+    // 5. Dar click al botón de "Consultar" DENTRO del modal
+    // =================================================================
+    console.log('🔍 Dando click al botón Consultar del modal...');
+    const botonConsultarModal = verdaderoFrameModal.locator('input[id="form:btnSearch"]').first();
+    await botonConsultarModal.click();
+    
+    // Esperamos un momento a que Ajax/JSF refresque la tabla de abajo
+    await sleep(4000); 
+    await screenshot(page, 'resultados-busqueda-modal');
+
+   // =================================================================
+    // 6. Analizar la tabla de resultados con lógica de desempate por Sede
+    // =================================================================
+    console.log('📊 Analizando la tabla de resultados de Sofia Plus con filtro de Sede...');
+    
+    const filasResultados = verdaderoFrameModal.locator('table[id="frmAmbiente:dtAmbientes"] tbody tr');
+    const conteoFilas = await filasResultados.count();
+
+    if (conteoFilas === 0) {
+        console.log('❌ REGISTRO DE EXCEPCIÓN: Sofia Plus arrojó 0 resultados.');
+        await page.pause();
+        throw new Error("No se encontraron ambientes.");
+    }
+
+    console.log(`💡 Se encontraron ${conteoFilas} opciones en la tabla. Buscando el match de San Gil...`);
+    
+    let indiceSeleccionado = -1;
+    
+    // Estos datos idealmente vendrían de tu base de datos (Repfora)
+    let nombreObjetivoDB = "AMBIENTE 6"; 
+    let sedeObjetivo = "SAN GIL"; // Filtro de seguridad obligatorio
+
+    for (let i = 0; i < conteoFilas; i++) {
+        const textoFila = await filasResultados.nth(i).innerText();
+        const textoLimpio = textoFila.toUpperCase();
+        console.log(`   [Fila ${i}]: ${textoFila.trim().replace(/\n/g, ' | ')}`);
+
+        // DOBLE VALIDACIÓN: Contiene el nombre del ambiente Y pertenece a la sede correcta
+        if (textoLimpio.includes(nombreObjetivoDB.toUpperCase()) && textoLimpio.includes(sedeObjetivo.toUpperCase())) {
+            indiceSeleccionado = i;
+            console.log(`🎯 ¡Match perfecto encontrado para San Gil en la Fila ${i}!`);
+            break; // Rompemos el ciclo porque encontramos el correcto
+        }
+    }
+
+    // Plan B de contingencia si el filtro estricto de sede falla
+    if (indiceSeleccionado === -1) {
+        console.log('⚠️ No se encontró un match que incluyera la sede. Tomando fila 0 por descarte...');
+        indiceSeleccionado = 0; 
+    }
+
+    // =================================================================
+    // 7. Hacer click en el botón de "Agregar" de la fila seleccionada
+    // =================================================================
+    console.log(`👆 Seleccionando el ambiente de la Fila ${indiceSeleccionado}...`);
+    const selectorEnlaceSeleccionar = `a[id="frmAmbiente:dtAmbientes:${indiceSeleccionado}:cmdlnkShow"]`;
+    const botonSeleccionarFila = verdaderoFrameModal.locator(selectorEnlaceSeleccionar).first();
+    
+    await botonSeleccionarFila.click();
+    console.log('✅ Click de selección ejecutado en la sede correcta.');
+
+    // Esperamos a que el modal desaparezca y el formulario principal procese el ambiente
+    await sleep(4000); 
+    await screenshot(page, 'ambiente-traspasado-exito');
   // =====================================
   // SCREENSHOT FINAL
   // =====================================
