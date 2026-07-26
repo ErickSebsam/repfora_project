@@ -1,17 +1,17 @@
 import cron from 'node-cron';
-import runSofiaJob from '../jobs/sofiaJob.js';
+import { ejecutarSincronizacionEvento } from '../jobs/syncJob.js';
+import { logger } from '../utils/logger.js';
 
-export const initCrons = () => {
-  console.log('[Cron Service] Inicializando tareas programadas...');
+export function iniciarCronServices() {
+  logger.info("Servicio de tareas Cron inicializado.");
 
-  // OPCIÓN 1: Para pruebas inmediatas (Ejecutar cada 2 minutos)
-  cron.schedule('*/2 * * * *', async () => {
-    console.log('[Cron] Disparando automatización de SOFIA Plus...');
-    await runSofiaJob();
+  // Ejemplo: Ejecutar cada 5 minutos (ajustable según la necesidad)
+  cron.schedule('*/5 * * * *', async () => {
+    logger.info("Ejecutando syncJob desde Cron...");
+    try {
+      await ejecutarSincronizacionEvento();
+    } catch (error) {
+      logger.error("Fallo la ejecución del Cron Job.", error);
+    }
   });
-
-  // OPCIÓN 2: Ejemplo real para Producción (Ejecutarse todos los días a las 6:00 AM)
-  // cron.schedule('0 6 * * *', async () => {
-  //   await runSofiaJob();
-  // });
-};
+}

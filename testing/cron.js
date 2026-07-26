@@ -1,15 +1,18 @@
-import 'dotenv/config';
-import connectDB from './config/db.js';
-import { initCrons } from './services/cronService.js';
+import { iniciarCronServices } from './services/cronService.js';
+import { ejecutarSincronizacionEvento } from './jobs/syncJob.js';
+import { logger } from './utils/logger.js';
 
-const startApp = async () => {
-  try {
-    await connectDB();
-    initCrons();
-    console.log('[App] Servicio Cron iniciado correctamente.');
-  } catch (error) {
-    console.error(`[App Error] Fallo al iniciar el servicio: ${error.message}`);
+async function main() {
+  logger.info("=== INICIANDO ORQUESTADOR CRON ===");
+
+  const ejecutarInmediato = process.argv.includes('--now');
+
+  if (ejecutarInmediato) {
+    logger.info("Modo inmediato activado (--now)");
+    await ejecutarSincronizacionEvento();
+  } else {
+    iniciarCronServices();
   }
-};
+}
 
-startApp();
+main().catch((err) => logger.error("Error en main cron execution:", err));

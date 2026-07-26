@@ -1,20 +1,6 @@
-import EventLog from '../models/EventLog.js';
-
-const logEvent = async ({ jobName, status, message = '', details = null, executionTimeMs = 0 }) => {
-  try {
-    const timestamp = new Date().toISOString();
-    console.log(`[${timestamp}] [${jobName}] [${status}] ${message}`);
-
-    await EventLog.create({
-      jobName,
-      status,
-      message,
-      details,
-      executionTimeMs,
-    });
-  } catch (err) {
-    console.error(`[Logger Error] No se pudo persistir el evento en la DB: ${err.message}`);
-  }
+export const logger = {
+  info: (msg) => console.log(`[INFO] ${new Date().toLocaleTimeString()} - ${msg}`),
+  success: (msg) => console.log(`[OK]   ${new Date().toLocaleTimeString()} - ${msg}`),
+  warn: (msg) => console.log(`[WARN] ${new Date().toLocaleTimeString()} - ${msg}`),
+  error: (msg, err) => console.error(`[ERR]  ${new Date().toLocaleTimeString()} - ${msg}`, err || '')
 };
-
-export default logEvent;    
