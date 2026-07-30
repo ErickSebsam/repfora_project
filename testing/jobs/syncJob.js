@@ -2,6 +2,20 @@ import { chromium } from 'playwright';
 import { obtenerProgramacion, desconectarDB } from '../config/db.js';
 import { logger } from '../utils/logger.js';
 
+// Dentro de jobs/syncJob.js
+import { parseSenaPlan } from '../utils/planningMapper.js';
+
+export async function runSyncJob() {
+  // 1. Obtienes el documento pesado de MongoDB o un JSON
+  const rawDocument = await obtenerDatosRaw(); 
+
+  // 2. Usas la función helper de utils para formatearlo
+  const cleanData = parseSenaPlan(rawDocument);
+
+  // 3. Trabajas con los datos ya limpios
+  console.log("Programa procesado:", cleanData.program.name);
+}
+
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function ejecutarSincronizacionEvento() {
