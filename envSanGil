@@ -40,6 +40,7 @@ FROM_EMAIL = 'senapruebas123@gmail.com'
 URL_FRONTEND = 'http://repforacat.com/#'
 
 
+
 # TOKEN TINIFY
 TOKEN_TINI = '0Ym5wckKmx0PKg1s2ltd5ywKDgVpv8yk'
 
