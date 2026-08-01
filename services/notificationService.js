@@ -276,6 +276,246 @@ export async function sendBatchEmails(emailsToSend) {
 }
 
 /**
+ * Envía notificación a instructores cuyas fichas no tienen ruta de aprendizaje asignada.
+ * Toma los registros filtrados del DF-14A, busca los instructores en la base de datos,
+ * agrupa por instructor y envía un correo consolidado.
+ * @param {Array<{fichaNumber: string, estado: string, enTransito: number}>} records - Registros filtrados del DF-14A.
+ * @param {string} coordinationName - Nombre de la coordinación para buscar credenciales de email.
+ * @returns {{ sent: number, failed: number, errors: Array, notFound: Array<string> }}
+ */
+export async function sendMissingRouteNotification(records, coordinationName = 'PROGRAMAS ESPECIALES') {
+  const results = { sent: 0, failed: 0, errors: [], notFound: [] };
+
+  if (!emailEnabled) {
+    console.log('[EMAIL] Envío de correos deshabilitado (emailEnabled=false)');
+    return results;
+  }
+
+  if (!records || records.length === 0) {
+    console.log('[EMAIL] No hay fichas sin ruta para notificar');
+    return results;
+  }
+
+  // Buscar coordinación para obtener credenciales de email
+  let coordination = null;
+  try {
+    const Coordination = (await import('../models/Coordination.js')).default;
+    coordination = await Coordination.findOne({ name: coordinationName, status: 0 });
+  } catch (err) {
+    console.warn('[EMAIL] No se pudo buscar coordinación para credenciales:', err.message);
+  }
+
+  const hasCoordCredentials = !!(coordination?.email && coordination?.passapp);
+  const fromEmail = hasCoordCredentials ? coordination.email : DEFAULT_EMAIL_USER;
+  const fromPass = hasCoordCredentials ? coordination.passapp : DEFAULT_EMAIL_PASS;
+
+  if (!fromEmail || !fromPass) {
+    console.error('[EMAIL] Sin credenciales de correo, omitiendo notificaciones de sin ruta');
+    results.errors.push('Sin credenciales de correo');
+    return results;
+  }
+
+  // Buscar instructores agrupando por ficha
+  // Las fichas YA EXISTENTES están en el modelo Fiche, no en ComplementaryRequest.
+  // ComplementaryRequest solo tiene las solicitudes nuevas de complementarias.
+  const Fiche = (await import('../models/Fiche.js')).default;
+  const Program = (await import('../models/Program.js')).default;
+  const instructorMap = new Map();
+
+  for (const record of records) {
+    const fiche = await Fiche.findOne({
+      number: record.fichaNumber,
+      status: 0,
+    }).populate('owner', 'name email emailpersonal')
+      .populate('program', 'name');
+
+    if (!fiche || !fiche.owner) {
+      results.notFound.push(record.fichaNumber);
+      console.log(`[EMAIL] Ficha ${record.fichaNumber} no encontrada en Fiche o sin instructor (owner)`);
+      continue;
+    }
+
+    const instructorId = fiche.owner._id.toString();
+    if (!instructorMap.has(instructorId)) {
+      instructorMap.set(instructorId, {
+        instructor: fiche.owner,
+        fichas: [],
+      });
+    }
+
+    instructorMap.get(instructorId).fichas.push({
+      fichaNumber: record.fichaNumber,
+      courseName: fiche.program?.name || 'Programa complementario',
+      enTransito: record.enTransito,
+    });
+  }
+
+  console.log(`[EMAIL] Notificación sin ruta: ${instructorMap.size} instructor(es), ${results.notFound.length} ficha(s) no encontrada(s)`);
+
+  // Enviar correo a cada instructor
+  for (const [, data] of instructorMap) {
+    try {
+      // Notificaciones sin ruta SIEMPRE van al correo real del instructor,
+      // sin importar USE_TEST_RECIPIENT (son correos operacionales de producción).
+      const toEmails = [data.instructor.email, data.instructor.emailpersonal].filter(Boolean);
+
+      if (toEmails.length === 0) {
+        console.warn(`[EMAIL] Instructor ${data.instructor.name} sin email, omitiendo`);
+        results.failed++;
+        results.errors.push({ instructor: data.instructor.name, error: 'Sin email' });
+        continue;
+      }
+
+      const payload = {
+        instructorName: data.instructor.name,
+        fichas: data.fichas,
+        url: process.env.FRONTEND_URL || 'https://repfora.sena.edu.co',
+      };
+
+      await sendEmail(
+        fromEmail,
+        fromPass,
+        toEmails,
+        `Fichas sin Ruta de Aprendizaje - ${data.fichas.map(f => f.fichaNumber).join(', ')}`,
+        payload,
+        './template/sinRutaNotification.hbs',
+        null,
+        null
+      );
+
+      console.log(`[EMAIL] ✓ Notificación sin ruta enviada a ${toEmails.join(', ')} (${data.instructor.name}) — ${data.fichas.length} ficha(s)`);
+      results.sent++;
+
+    } catch (error) {
+      console.error(`[EMAIL] ✗ Error enviando notificación sin ruta a ${data.instructor.name}:`, error.message);
+      results.failed++;
+      results.errors.push({ instructor: data.instructor.name, error: error.message });
+    }
+  }
+
+  return results;
+}
+
+/**
+ * Envía notificación por correo a instructores con fichas complementarias
+ * que tienen juicios de evaluación pendientes (aprendices en formación).
+ * Toma los registros filtrados del DF-14A, busca los instructores en la base de datos,
+ * agrupa por instructor y envía un correo consolidado.
+ * @param {Array<{fichaNumber: string, estado: string, enFormacion: number}>} records - Registros filtrados del DF-14A.
+ * @param {string} coordinationName - Nombre de la coordinación para buscar credenciales de email.
+ * @returns {{ sent: number, failed: number, errors: Array, notFound: Array<string> }}
+ */
+export async function sendMissingJudgmentsNotification(records, coordinationName = 'PROGRAMAS ESPECIALES') {
+  const results = { sent: 0, failed: 0, errors: [], notFound: [] };
+
+  if (!emailEnabled) {
+    console.log('[EMAIL] Envío de correos deshabilitado (emailEnabled=false)');
+    return results;
+  }
+
+  if (!records || records.length === 0) {
+    console.log('[EMAIL] No hay fichas con juicios pendientes para notificar');
+    return results;
+  }
+
+  // Buscar coordinación para obtener credenciales de email
+  let coordination = null;
+  try {
+    const Coordination = (await import('../models/Coordination.js')).default;
+    coordination = await Coordination.findOne({ name: coordinationName, status: 0 });
+  } catch (err) {
+    console.warn('[EMAIL] No se pudo buscar coordinación para credenciales:', err.message);
+  }
+
+  const hasCoordCredentials = !!(coordination?.email && coordination?.passapp);
+  const fromEmail = hasCoordCredentials ? coordination.email : DEFAULT_EMAIL_USER;
+  const fromPass = hasCoordCredentials ? coordination.passapp : DEFAULT_EMAIL_PASS;
+
+  if (!fromEmail || !fromPass) {
+    console.error('[EMAIL] Sin credenciales de correo, omitiendo notificaciones de juicios pendientes');
+    results.errors.push('Sin credenciales de correo');
+    return results;
+  }
+
+  // Buscar instructores agrupando por ficha (usa Fiche, igual que sinRuta)
+  const Fiche = (await import('../models/Fiche.js')).default;
+  const Program = (await import('../models/Program.js')).default;
+  const instructorMap = new Map();
+
+  for (const record of records) {
+    const fiche = await Fiche.findOne({
+      number: record.fichaNumber,
+      status: 0,
+    }).populate('owner', 'name email emailpersonal')
+      .populate('program', 'name');
+
+    if (!fiche || !fiche.owner) {
+      results.notFound.push(record.fichaNumber);
+      console.log(`[EMAIL] Ficha ${record.fichaNumber} no encontrada en Fiche o sin instructor (owner)`);
+      continue;
+    }
+
+    const instructorId = fiche.owner._id.toString();
+    if (!instructorMap.has(instructorId)) {
+      instructorMap.set(instructorId, {
+        instructor: fiche.owner,
+        fichas: [],
+      });
+    }
+
+    instructorMap.get(instructorId).fichas.push({
+      fichaNumber: record.fichaNumber,
+      courseName: fiche.program?.name || 'Curso complementario',
+      enFormacion: record.enFormacion,
+    });
+  }
+
+  console.log(`[EMAIL] Notificación juicios pendientes: ${instructorMap.size} instructor(es), ${results.notFound.length} ficha(s) no encontrada(s)`);
+
+  // Enviar correo a cada instructor
+  for (const [, data] of instructorMap) {
+    try {
+      // Notificaciones de juicios SIEMPRE van al correo real del instructor,
+      // sin importar USE_TEST_RECIPIENT (son correos operacionales de producción).
+      const toEmails = [data.instructor.email, data.instructor.emailpersonal].filter(Boolean);
+
+      if (toEmails.length === 0) {
+        console.warn(`[EMAIL] Instructor ${data.instructor.name} sin email, omitiendo`);
+        results.failed++;
+        results.errors.push({ instructor: data.instructor.name, error: 'Sin email' });
+        continue;
+      }
+
+      const payload = {
+        instructorName: data.instructor.name,
+        fichas: data.fichas,
+      };
+
+      await sendEmail(
+        fromEmail,
+        fromPass,
+        toEmails,
+        `Juicios de Evaluación Pendientes - ${data.fichas.map(f => f.fichaNumber).join(', ')}`,
+        payload,
+        './template/juiciosPendientesComplementaria.hbs',
+        null,
+        null
+      );
+
+      console.log(`[EMAIL] ✓ Notificación juicios pendientes enviada a ${toEmails.join(', ')} (${data.instructor.name}) — ${data.fichas.length} ficha(s)`);
+      results.sent++;
+
+    } catch (error) {
+      console.error(`[EMAIL] ✗ Error enviando notificación de juicios a ${data.instructor.name}:`, error.message);
+      results.failed++;
+      results.errors.push({ instructor: data.instructor.name, error: error.message });
+    }
+  }
+
+  return results;
+}
+
+/**
  * Envía un resumen al coordinador con las fichas que tuvieron problemas
  * @param {Object} coordination - La coordinación con email y supervisoremail
  * @param {Map} fichas - Map de fichas { ficheNumber -> { instructors: [], outcomes: [] } }

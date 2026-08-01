@@ -1422,7 +1422,6 @@ newCtrl.getNewsByInstructor = async (req, res) => {
         },
       })
       .populate("competence outcome")
-  
 
     //recorrer las novedades y dar un indice a cada new
     improvements.forEach((newItem, index) => {

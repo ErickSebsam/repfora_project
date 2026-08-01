@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
 const User = require('./models/User.js').default;
 
-const MONGO_URL = 'mongodb://127.0.0.1:27017/Horarios_SENA';
+require('dotenv').config();
+const MONGO_URL = process.env.MONGO_URL || 'mongodb://deivibogoya_db_user:planeaciones2026@ac-5b945qk-shard-00-00.kqqzr6f.mongodb.net:27017,ac-5b945qk-shard-00-01.kqqzr6f.mongodb.net:27017,ac-5b945qk-shard-00-02.kqqzr6f.mongodb.net:27017/?ssl=true&replicaSet=atlas-4xahgw-shard-0&authSource=admin';
 
 async function check() {
   await mongoose.connect(MONGO_URL);

@@ -1,0 +1,1 @@
+import{a as e,n as t}from"./api-_jbXczzW.js";var n={getNotifications:async()=>{try{return await t(`/notifications`)}catch(e){throw console.error(`Error fetching notifications:`,e),e}},markAsRead:async t=>{try{return await e(`/notifications/${t}/read`)}catch(e){throw console.error(`Error marking notification ${t} as read:`,e),e}}};export{n as t};

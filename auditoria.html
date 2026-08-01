@@ -1,0 +1,1650 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auditoría de Resultados Vencidos</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; }
+
+    .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+
+    .header { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .header h1 { color: #333; font-size: 24px; margin-bottom: 5px; }
+    .header p { color: #666; font-size: 14px; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+    .tab { padding: 12px 24px; background: white; border: none; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 14px; font-weight: 500; color: #666; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .tab:hover { background: #f8f9fa; }
+    .tab.active { background: #0056b3; color: white; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .stat-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; }
+    .stat-card .number { font-size: 32px; font-weight: bold; color: #0056b3; }
+    .stat-card .label { color: #666; font-size: 14px; margin-top: 5px; }
+
+    .filters { background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .filters input, .filters select { padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+    .filters input[type="text"] { width: 300px; }
+
+    .results { display: grid; gap: 15px; }
+
+    /* Ficha Group */
+    .fiche-group { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden; margin-bottom: 15px; }
+    .fiche-header { padding: 15px; background: linear-gradient(135deg, #0056b3 0%, #004494 100%); color: white; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+    .fiche-header:hover { background: linear-gradient(135deg, #004494 0%, #003373 100%); }
+    .fiche-header .fiche-number { font-size: 18px; font-weight: bold; }
+    .fiche-header .fiche-stats { display: flex; gap: 15px; font-size: 14px; }
+    .fiche-header .toggle { font-size: 20px; transition: transform 0.2s; }
+    .fiche-header .toggle.open { transform: rotate(180deg); }
+    .fiche-content { display: none; padding: 15px; }
+    .fiche-content.open { display: block; }
+
+    /* Outcome Card */
+    .outcome-card { background: #f8f9fa; border-radius: 6px; overflow: hidden; margin-bottom: 10px; border-left: 4px solid #17a2b8; }
+    .outcome-card.critical { border-left-color: #dc3545; }
+    .outcome-card.warning { border-left-color: #ffc107; }
+
+    .outcome-header { padding: 12px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+    .outcome-header:hover { background: #e9ecef; }
+    .outcome-header .outcome { font-weight: 500; color: #333; }
+    .outcome-header .days { padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+    .outcome-header .days.critical { background: #dc3545; color: white; }
+    .outcome-header .days.warning { background: #ffc107; color: #333; }
+    .outcome-header .days.info { background: #17a2b8; color: white; }
+    .outcome-header .toggle { font-size: 14px; transition: transform 0.2s; color: #666; }
+    .outcome-header .toggle.open { transform: rotate(180deg); }
+
+    .outcome-body { display: none; padding: 12px; border-top: 1px solid #dee2e6; font-size: 13px; color: #666; }
+    .outcome-body.open { display: block; }
+
+    .outcome-meta { display: flex; gap: 15px; margin-bottom: 12px; flex-wrap: wrap; }
+
+    .learners-list { background: white; border-radius: 4px; overflow: hidden; }
+    .learner-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-bottom: 1px solid #eee; }
+    .learner-item:last-child { border-bottom: none; }
+    .learner-item .learner-info { display: flex; align-items: center; gap: 10px; }
+    .learner-item .learner-name { font-weight: 500; color: #333; }
+    .learner-item .learner-doc { font-size: 12px; color: #888; }
+    .learner-item button.omit-btn { padding: 4px 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; }
+    .learner-item button.omit-btn:hover { background: #5a6268; }
+
+    .total-missing { background: #fff3cd; padding: 15px; border-radius: 4px; text-align: center; color: #856404; font-style: italic; }
+
+    /* Omissions */
+    .omission-item { background: #f8f9fa; padding: 15px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid #6c757d; }
+    .omission-item .learner-info { display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px; }
+    .omission-item .learner-name { font-weight: 500; color: #333; }
+    .omission-item .learner-doc { font-size: 13px; color: #666; }
+    .omission-item .justification { background: white; padding: 10px; border-radius: 4px; font-size: 13px; color: #555; margin-top: 8px; }
+    .omission-item .justification-label { font-size: 11px; color: #888; font-weight: 500; text-transform: uppercase; }
+    .omission-item .actions { margin-top: 10px; }
+    .omission-item button { padding: 6px 12px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+    .omission-item button:hover { background: #c82333; }
+
+    /* Omission Form */
+    .omission-form { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .omission-form h3 { margin-bottom: 15px; color: #333; }
+    .omission-form .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+    .omission-form .form-group { margin-bottom: 15px; }
+    .omission-form label { display: block; margin-bottom: 5px; color: #555; font-size: 14px; }
+    .omission-form input, .omission-form textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+    .omission-form textarea { min-height: 80px; resize: vertical; }
+    .omission-form button { padding: 10px 20px; background: #0056b3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+    .omission-form button:hover { background: #004494; }
+
+    /* History */
+    .history-item { background: white; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden; }
+    .history-header { display: flex; justify-content: space-between; align-items: center; padding: 15px; cursor: pointer; }
+    .history-header:hover { background: #f8f9fa; }
+    .history-info { flex: 1; }
+    .history-date { font-weight: bold; color: #333; font-size: 15px; margin-bottom: 5px; }
+    .history-stats { display: flex; gap: 15px; font-size: 12px; color: #666; flex-wrap: wrap; }
+    .history-stat { display: flex; align-items: center; gap: 4px; }
+    .history-stat .badge { background: #e9ecef; padding: 2px 8px; border-radius: 4px; font-weight: 500; }
+    .history-stat.critical .badge { background: #fee; color: #c62828; }
+    .history-stat.warning .badge { background: #fff3cd; color: #856404; }
+    .history-stat.success .badge { background: #d4edda; color: #155724; }
+    .history-toggle { font-size: 18px; color: #666; transition: transform 0.2s; }
+    .history-toggle.open { transform: rotate(180deg); }
+    .history-details { display: none; padding: 15px; background: #f8f9fa; border-top: 1px solid #dee2e6; }
+    .history-details.open { display: block; }
+    .history-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 15px; }
+    .history-summary-card { background: white; padding: 12px; border-radius: 6px; text-align: center; border: 1px solid #e9ecef; }
+    .history-summary-card .number { font-size: 24px; font-weight: bold; color: #0056b3; }
+    .history-summary-card .label { font-size: 11px; color: #666; margin-top: 4px; }
+    .history-fiches { margin-top: 15px; }
+    .history-fiche-item { background: white; padding: 12px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid #0056b3; }
+    .history-fiche-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; cursor: pointer; }
+    .history-fiche-header:hover { background: #f8f9fa; }
+    .history-fiche-number { font-weight: 500; color: #333; }
+    .history-fiche-stats { font-size: 12px; color: #666; }
+    .history-fiche-toggle { font-size: 14px; color: #666; transition: transform 0.2s; }
+    .history-fiche-toggle.open { transform: rotate(180deg); }
+    .history-fiche-outcomes { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e9ecef; }
+    .history-fiche-outcomes.open { display: block; }
+    .history-outcome-item { padding: 8px 12px; background: #f8f9fa; border-radius: 4px; margin-bottom: 6px; font-size: 12px; }
+    .history-outcome-item .outcome-text { font-weight: 500; color: #333; margin-bottom: 4px; }
+    .history-outcome-item .outcome-meta { display: flex; gap: 10px; color: #666; font-size: 11px; }
+    .history-outcome-item .learners-preview { margin-top: 6px; padding-top: 6px; border-top: 1px solid #dee2e6; }
+    .history-outcome-item .learners-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+    .history-outcome-item .learner-tag { background: #e9ecef; padding: 3px 8px; border-radius: 4px; font-size: 11px; }
+    .history-outcome-item .learner-tag.total { background: #fff3cd; color: #856404; font-style: italic; }
+
+    /* Modal para justificación */
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: white; border-radius: 8px; padding: 25px; width: 90%; max-width: 500px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+    .modal h3 { margin-bottom: 15px; color: #333; }
+    .modal .learner-info-display { background: #f8f9fa; padding: 12px; border-radius: 4px; margin-bottom: 15px; }
+    .modal .form-group { margin-bottom: 15px; }
+    .modal label { display: block; margin-bottom: 5px; color: #555; font-size: 14px; }
+    .modal textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; min-height: 80px; resize: vertical; }
+    .modal .actions { display: flex; gap: 10px; justify-content: flex-end; }
+    .modal button { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+    .modal .btn-cancel { background: #6c757d; color: white; }
+    .modal .btn-cancel:hover { background: #5a6268; }
+    .modal .btn-confirm { background: #0056b3; color: white; }
+    .modal .btn-confirm:hover { background: #004494; }
+
+    .loading { text-align: center; padding: 40px; color: #666; }
+    .error { background: #f8d7da; color: #721c24; padding: 15px; border-radius: 4px; margin-bottom: 20px; }
+    .success { background: #d4edda; color: #155724; padding: 15px; border-radius: 4px; margin-bottom: 20px; }
+
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+    .badge-red { background: #ffebee; color: #c62828; }
+    .badge-gray { background: #f5f5f5; color: #666; }
+
+    .cron-control { background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+    .cron-info { display: flex; align-items: center; gap: 15px; }
+    .cron-status { display: flex; align-items: center; gap: 8px; }
+    .cron-status .indicator { width: 10px; height: 10px; border-radius: 50%; }
+    .cron-status .indicator.active { background: #28a745; box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.2); }
+    .cron-status .indicator.inactive { background: #6c757d; }
+    .cron-status .status-text { font-weight: 500; }
+    .cron-status .status-text.enabled { color: #28a745; }
+    .cron-status .status-text.disabled { color: #6c757d; }
+    .cron-actions { display: flex; gap: 10px; }
+    .cron-actions button { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+    .cron-actions button.btn-enable { background: #28a745; color: white; }
+    .cron-actions button.btn-enable:hover { background: #218838; }
+    .cron-actions button.btn-disable { background: #dc3545; color: white; }
+    .cron-actions button.btn-disable:hover { background: #c82333; }
+    .cron-actions button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .cron-schedule { font-size: 13px; color: #666; }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: #999; }
+    .empty-state svg { width: 80px; height: 80px; margin-bottom: 20px; opacity: 0.3; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📋 Auditoría de Resultados</h1>
+      <p id="lastUpdate">Cargando...</p>
+    </div>
+
+    <!-- Cron Control -->
+    <div class="cron-control">
+      <div class="cron-info">
+        <div class="cron-status" id="cronStatus">
+          <span class="indicator inactive"></span>
+          <span class="status-text disabled">Cron desactivado</span>
+        </div>
+        <span class="cron-schedule">Programado: 1 AM hora Colombia (diario)</span>
+      </div>
+      <div class="cron-actions">
+        <button class="btn-enable" onclick="toggleCron(true)" id="btnEnableCron">✓ Activar</button>
+        <button class="btn-disable" onclick="toggleCron(false)" id="btnDisableCron">✗ Desactivar</button>
+        <button onclick="runAuditNow()" id="btnRunAudit" style="background:#0056b3;color:white;">▶ Ejecutar ahora</button>
+        <button onclick="refreshCronStatus()">↻ Actualizar</button>
+      </div>
+    </div>
+
+    <!-- Email Control -->
+    <div class="cron-control">
+      <div class="cron-info">
+        <div class="cron-status" id="emailStatus">
+          <span class="indicator inactive"></span>
+          <span class="status-text disabled">Email desactivado</span>
+        </div>
+        <span class="cron-schedule">Notificaciones por correo a instructores</span>
+      </div>
+      <div class="cron-actions">
+        <button class="btn-enable" onclick="toggleEmail(true)" id="btnEnableEmail">✓ Activar</button>
+        <button class="btn-disable" onclick="toggleEmail(false)" id="btnDisableEmail">✗ Desactivar</button>
+      </div>
+    </div>
+
+    <div id="error" class="error" style="display:none;"></div>
+    <div id="success" class="success" style="display:none;"></div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('vencidos')">Resultados Vencidos</button>
+      <button class="tab" onclick="switchTab('omisiones')">Aprendices Omitidos</button>
+      <button class="tab" onclick="switchTab('excluidas')">Fichas Excluidas</button>
+      <button class="tab" onclick="switchTab('inconsistencias')">Inconsistencias</button>
+      <button class="tab" onclick="switchTab('historial')">Historial de Auditorías</button>
+      <button class="tab" onclick="switchTab('plantilla')">Plantilla Email</button>
+    </div>
+
+    <!-- Tab: Vencidos -->
+    <div id="tab-vencidos" class="tab-content active">
+      <div class="stats" id="stats"></div>
+
+      <div class="filters">
+        <select id="coordinationSelect" onchange="filterByCoordination()">
+          <option value="">Todas las coordinaciones</option>
+        </select>
+        <input type="text" id="searchInput" placeholder="🔍 Buscar por ficha, resultado o instructor..." onkeyup="filterResults()">
+        <select id="sortSelect" onchange="filterResults()">
+          <option value="daysDesc" selected>Más vencidos primero</option>
+          <option value="daysAsc">Menos vencidos primero</option>
+          <option value="fiche">Por ficha</option>
+        </select>
+      </div>
+
+      <div class="results" id="results">
+        <div class="loading">Cargando...</div>
+      </div>
+    </div>
+
+    <!-- Tab: Omisiones -->
+    <div id="tab-omisiones" class="tab-content">
+      <div class="omission-form">
+        <h3>Omitir Aprendiz</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Schedule ID:</label>
+            <input type="text" id="scheduleId" placeholder="Ej: 507f1f77bcf86cd799439011">
+          </div>
+          <div class="form-group">
+            <label>Documento del Aprendiz:</label>
+            <input type="text" id="learnerDocument" placeholder="Ej: 12345678">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nombre del Aprendiz (opcional):</label>
+            <input type="text" id="learnerName" placeholder="Nombre completo">
+          </div>
+          <div class="form-group">
+            <label>Número de Ficha (opcional):</label>
+            <input type="text" id="ficheNumber" placeholder="Ej: 2559680">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Justificación *:</label>
+          <textarea id="justification" placeholder="Explique por qué se omite este aprendiz..." required></textarea>
+        </div>
+        <button onclick="addOmission()">Omitir Aprendiz</button>
+      </div>
+
+      <div class="filters">
+        <input type="text" id="searchOmissions" placeholder="🔍 Buscar por ficha, documento o nombre..." onkeyup="filterOmissions()">
+      </div>
+
+      <div class="results" id="omissionsResults">
+        <div class="loading">Cargando omisiones...</div>
+      </div>
+    </div>
+
+    <!-- Tab: Fichas Excluidas -->
+    <div id="tab-excluidas" class="tab-content">
+      <!-- Fichas Fallidas -->
+      <div class="omission-form" style="background:#fff3cd;border:1px solid #ffc107;padding:15px;border-radius:8px;">
+        <h3 style="margin-top:0;margin-bottom:10px;color:#856404;">⚠️ Fichas que Fallaron al Descargar</h3>
+        <p style="color:#856404;font-size:13px;margin-bottom:10px;">Estas fichas generaron errores durante la última ejecución del cron. Puedes omitirlas individualmente.</p>
+        <div id="failedFichesResults">
+          <div class="loading">Cargando fichas fallidas...</div>
+        </div>
+      </div>
+
+      <div class="omission-form">
+        <h3>Excluir Ficha de Auditoría</h3>
+        <p style="color:#666;font-size:13px;margin-bottom:15px;">Las fichas excluidas no serán procesadas por el cron de auditoría. Útil para fichas que no existen en Sofía Plus o que generan errores al descargar.</p>
+        <div style="display:flex;gap:10px;align-items:end;">
+          <div class="form-group" style="margin-bottom:0;flex:1;">
+            <label>Número de Ficha:</label>
+            <input type="text" id="excludeFicheNumber" placeholder="Ej: 2451837">
+          </div>
+          <div class="form-group" style="margin-bottom:0;flex:2;">
+            <label>Razón:</label>
+            <input type="text" id="excludeReason" placeholder="Ej: No existe en Sofía Plus">
+          </div>
+          <button onclick="excludeFiche()" style="height:40px;">Excluir</button>
+        </div>
+      </div>
+
+      <!-- Exclusión en lote -->
+      <div class="omission-form" style="margin-top:20px;background:#fff3cd;border:1px solid #ffc107;padding:15px;border-radius:8px;">
+        <h3 style="margin-top:0;color:#856404;">⚠️ Excluir Múltiples Fichas</h3>
+        <p style="color:#856404;font-size:13px;margin-bottom:10px;">Usa esta sección cuando el cron reporte fichas que fallaron al descargar. Pega los números de ficha separados por coma, espacio o salto de línea.</p>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label>Fichas (una por línea o separadas por coma):</label>
+            <textarea id="excludeMultipleFiches" rows="5" placeholder="Ej:&#10;2504403&#10;2547415&#10;2627096&#10;&#10;O separadas por coma: 2504403, 2547415, 2627096" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:4px;font-family:monospace;font-size:14px;"></textarea>
+          </div>
+          <div style="display:flex;gap:10px;align-items:end;">
+            <div class="form-group" style="margin-bottom:0;flex:1;">
+              <label>Razón para todas:</label>
+              <input type="text" id="excludeMultipleReason" placeholder="Ej: Fichas que fallaron al descargar en el cron" value="Ficha no encontrada en Sofía Plus">
+            </div>
+            <button onclick="excludeMultipleFiches()" style="height:40px;background:#dc3545;">Excluir Todas</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="results" id="excludedResults">
+        <div class="loading">Cargando fichas excluidas...</div>
+      </div>
+    </div>
+
+    <!-- Tab: Inconsistencias -->
+    <div id="tab-inconsistencias" class="tab-content">
+      <div class="omission-form" style="background:#fff3cd;border:1px solid #ffc107;padding:20px;border-radius:8px;margin-bottom:20px;">
+        <h3 style="margin:0 0 10px 0;color:#856404;">⚠️ Resultados No Encontrados en Excel</h3>
+        <p style="color:#856404;font-size:13px;margin:0;">Estos resultados existen en la base de datos pero no se encontraron en el Excel de Sofía Plus. Puede ser por errores de tipeo en el nombre del resultado o porque la ficha no ha sido cargada correctamente en Sofía Plus.</p>
+      </div>
+      <div class="results" id="inconsistenciesResults">
+        <div class="loading">Cargando inconsistencias...</div>
+      </div>
+    </div>
+
+    <!-- Tab: Historial -->
+    <div id="tab-historial" class="tab-content">
+      <div class="results" id="historyResults">
+        <div class="loading">Cargando historial...</div>
+      </div>
+    </div>
+
+    <!-- Tab: Plantilla Email -->
+    <div id="tab-plantilla" class="tab-content">
+      <div class="omission-form" style="max-width: 700px;">
+        <h3>Plantilla de Correo</h3>
+        <p style="color: #666; font-size: 13px; margin-bottom: 15px;">Variable: <code>{fichaNumero}</code> (se reemplaza automáticamente al enviar)</p>
+
+        <div class="form-group" style="margin-bottom: 15px;">
+          <label><strong>Asunto del correo:</strong></label>
+          <input type="text" id="tplSubject" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 15px;">
+          <label><strong>Contenido del correo:</strong></label>
+          <textarea id="tplContent" rows="20" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; line-height: 1.5;"></textarea>
+        </div>
+
+        <div style="margin-top: 20px; display: flex; gap: 10px;">
+          <button onclick="saveEmailTemplate()" style="padding: 12px 30px; background: #39A900; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px;">Guardar</button>
+          <button onclick="resetEmailTemplate()" style="padding: 12px 30px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">Restaurar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para justificación de omisión -->
+  <div class="modal-overlay" id="omissionModal">
+    <div class="modal">
+      <h3>Omitir Aprendiz</h3>
+      <div class="learner-info-display" id="modalLearnerInfo"></div>
+      <div class="form-group">
+        <label>Justificación *:</label>
+        <textarea id="modalJustification" placeholder="Explique por qué se omite este aprendiz..."></textarea>
+      </div>
+      <div class="form-group" style="margin-top: 15px;">
+        <label style="display: flex; align-items: start; gap: 10px; cursor: pointer;">
+          <input type="checkbox" id="omitEverywhere" style="margin-top: 3px;">
+          <span>
+            <strong>Omitir en TODOS los resultados de aprendizaje</strong><br>
+            <span style="font-size: 12px; color: #666; font-weight: normal;">
+              Si marcas esta opción, el aprendiz se omitirá en todos los resultados donde aparezca.
+              Si no marcas, solo se omitirá en este resultado específico.
+            </span>
+          </span>
+        </label>
+      </div>
+      <div class="actions">
+        <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+        <button class="btn-confirm" onclick="confirmOmission()">Omitir</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let allVencidosGrouped = [];
+    let allOmissionsGrouped = [];
+    let allCoordinations = [];
+    let pendingOmission = null;
+
+    // Cargar datos al iniciar
+    loadCoordinations();
+    loadState();
+    loadOmissions();
+
+    async function loadCoordinations() {
+      try {
+        const response = await fetch('/api/auditoria/coordinaciones');
+        const result = await response.json();
+        if (response.ok) {
+          allCoordinations = result.data || [];
+          const select = document.getElementById('coordinationSelect');
+          allCoordinations.forEach(c => {
+            const option = document.createElement('option');
+            option.value = c._id;
+            option.textContent = c.name;
+            select.appendChild(option);
+          });
+        }
+      } catch (error) {
+        console.error('Error cargando coordinaciones:', error);
+      }
+    }
+
+    function switchTab(tabName) {
+      // Ocultar todos los contenidos
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+
+      // Mostrar el seleccionado
+      document.getElementById('tab-' + tabName).classList.add('active');
+      event.target.classList.add('active');
+
+      // Cargar datos según la pestaña
+      if (tabName === 'vencidos') loadState();
+      else if (tabName === 'omisiones') loadOmissions();
+      else if (tabName === 'excluidas') { loadFailedFiches(); loadExcludedFiches(); }
+      else if (tabName === 'inconsistencias') loadInconsistencies();
+      else if (tabName === 'historial') loadHistory();
+      else if (tabName === 'plantilla') loadEmailTemplate();
+    }
+
+    async function loadState() {
+      try {
+        const response = await fetch('/api/auditoria/vencidos/agrupados');
+        const result = await response.json();
+
+        if (!response.ok) throw new Error(result.error || 'Error cargando datos');
+
+        allVencidosGrouped = result.data || [];
+
+        renderStats();
+        renderVencidos(allVencidosGrouped);
+
+        // Mostrar fecha de última actualización
+        if (result.ultimaActualizacion) {
+          const fecha = new Date(result.ultimaActualizacion).toLocaleString('es-CO');
+          document.getElementById('lastUpdate').textContent = `Última actualización: ${fecha}`;
+        }
+
+      } catch (error) {
+        showError('Error: ' + error.message);
+        document.getElementById('results').innerHTML = '<div class="empty-state">Error al cargar los datos</div>';
+      }
+    }
+
+    function renderStats() {
+      // Aplanar todos los outcomes para calcular estadísticas
+      const allOutcomes = allVencidosGrouped.flatMap(f => f.outcomes);
+      const total = allOutcomes.length;
+      const critical = allOutcomes.filter(d => d.daysOverdue > 20).length;
+      const avgDays = total > 0 ? Math.round(allOutcomes.reduce((sum, d) => sum + d.daysOverdue, 0) / total) : 0;
+      const totalSinNota = allOutcomes.reduce((sum, d) => sum + d.missingCount, 0);
+
+      document.getElementById('stats').innerHTML = `
+        <div class="stat-card">
+          <div class="number">${total}</div>
+          <div class="label">Resultados Vencidos</div>
+        </div>
+        <div class="stat-card">
+          <div class="number" style="color:#dc3545">${critical}</div>
+          <div class="label">Críticos (>20 días)</div>
+        </div>
+        <div class="stat-card">
+          <div class="number">${avgDays}</div>
+          <div class="label">Días Promedio</div>
+        </div>
+        <div class="stat-card">
+          <div class="number" style="color:#28a745">${totalSinNota}</div>
+          <div class="label">Aprendices Sin Nota</div>
+        </div>
+      `;
+    }
+
+    function renderVencidos(data) {
+      if (data.length === 0) {
+        document.getElementById('results').innerHTML = `
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+            <p>No se encontraron resultados vencidos</p>
+          </div>`;
+        return;
+      }
+
+      document.getElementById('results').innerHTML = data.map(fiche => {
+        return `
+          <div class="fiche-group">
+            <div class="fiche-header" onclick="toggleFiche(this)">
+              <span class="fiche-number">📁 Ficha ${fiche.ficheNumber}</span>
+              <div class="fiche-stats">
+                <span>${fiche.outcomes.length} resultado${fiche.outcomes.length !== 1 ? 's' : ''}</span>
+                <span>👤 Líder de ficha: ${fiche.instructorName || 'Sin instructor'}</span>
+              </div>
+              <span class="toggle">▼</span>
+            </div>
+            <div class="fiche-content">
+              ${fiche.outcomes.map(d => {
+                const severityClass = d.daysOverdue > 20 ? 'critical' : d.daysOverdue >= 8 ? 'warning' : '';
+                const fendDate = new Date(d.fend).toLocaleDateString('es-CO');
+                const scheduleId = d.scheduleId;
+                const ficheNumber = d.ficheNumber;
+                const outcomeText = d.outcomeText;
+                const instructorName = d.instructorName || 'Sin instructor';
+                const instructorEmail = d.instructorEmail || '';
+
+                return `
+                  <div class="outcome-card ${severityClass}">
+                    <div class="outcome-header" onclick="toggleOutcome(this)">
+                      <span class="outcome">${d.outcomeText.substring(0, 60)}${d.outcomeText.length > 60 ? '...' : ''}</span>
+                      <span class="days ${severityClass}">${d.daysOverdue} días</span>
+                      <span class="toggle">▼</span>
+                    </div>
+                    <div class="outcome-body">
+                      <div class="outcome-meta">
+                        <span>📅 Fecha fin: ${fendDate}</span>
+                        <span>👥 <span class="badge badge-red">${d.missingCount}</span> sin nota</span>
+                        <span>👤 ${instructorName}</span>
+                        ${instructorEmail ? `<span>✉️ ${instructorEmail}</span>` : ''}
+                      </div>
+                      ${renderLearnersList(d, scheduleId, ficheNumber, outcomeText)}
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderLearnersList(outcome, scheduleId, ficheNumber, outcomeText) {
+      // Si es total missing, mostrar mensaje genérico
+      if (outcome.isTotalMissing) {
+        return `
+          <div class="total-missing">
+            ⚠️ Resultado sin evaluar (${outcome.totalLearners} aprendices)
+          </div>
+        `;
+      }
+
+      // Mostrar lista de aprendices con botón de omitir
+      const learners = outcome.missingLearners || [];
+      if (learners.length === 0) {
+        return '<div class="total-missing">No hay aprendices pendientes</div>';
+      }
+
+      return `
+        <div class="learners-list">
+          ${learners.map(l => `
+            <div class="learner-item">
+              <div class="learner-info">
+                <span class="learner-name">${l.name || 'Sin nombre'}</span>
+                <span class="learner-doc">Tipo Identificacion: ${l.documentType || 'CC'} Numero: ${l.document}</span>
+              </div>
+              <button class="omit-btn" onclick="openOmissionModal('${scheduleId}', '${l.document}', '${l.name || ''}', '${ficheNumber}', '${outcomeText.replace(/'/g, "\\'")}')">
+                Omitir
+              </button>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function toggleFiche(header) {
+      const content = header.nextElementSibling;
+      const toggle = header.querySelector('.toggle');
+      content.classList.toggle('open');
+      toggle.classList.toggle('open');
+    }
+
+    function toggleOutcome(header) {
+      const body = header.nextElementSibling;
+      const toggle = header.querySelector('.toggle');
+      body.classList.toggle('open');
+      toggle.classList.toggle('open');
+    }
+
+    async function filterByCoordination() {
+      const coordinationId = document.getElementById('coordinationSelect').value;
+
+      if (!coordinationId) {
+        // Cargar todos los vencidos
+        await loadState();
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/auditoria/vencidos/coordinacion/${coordinationId}`);
+        const result = await response.json();
+
+        if (!response.ok) throw new Error(result.error || 'Error cargando datos');
+
+        allVencidosGrouped = result.data || [];
+
+        renderStats();
+        renderVencidos(allVencidosGrouped);
+      } catch (error) {
+        showError('Error: ' + error.message);
+      }
+    }
+
+    function filterResults() {
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const sort = document.getElementById('sortSelect').value;
+
+      let filtered = allVencidosGrouped.map(fiche => ({
+        ...fiche,
+        outcomes: fiche.outcomes.filter(d =>
+          d.ficheNumber.includes(search) ||
+          d.outcomeText.toLowerCase().includes(search) ||
+          (d.instructorName || '').toLowerCase().includes(search)
+        )
+      })).filter(f => f.outcomes.length > 0);
+
+      // Ordenar outcomes dentro de cada ficha
+      filtered = filtered.map(fiche => ({
+        ...fiche,
+        outcomes: [...fiche.outcomes].sort((a, b) => {
+          if (sort === 'daysDesc') return b.daysOverdue - a.daysOverdue;
+          if (sort === 'daysAsc') return a.daysOverdue - b.daysOverdue;
+          return 0;
+        })
+      }));
+
+      // Ordenar fichas
+      filtered.sort((a, b) => {
+        if (sort === 'fiche') return a.ficheNumber.localeCompare(b.ficheNumber);
+        return b.outcomes.length - a.outcomes.length;
+      });
+
+      renderVencidos(filtered);
+    }
+
+    // Modal functions
+    function openOmissionModal(scheduleId, learnerDocument, learnerName, ficheNumber, outcomeText) {
+      pendingOmission = { scheduleId, learnerDocument, learnerName, ficheNumber, outcomeText };
+
+      document.getElementById('modalLearnerInfo').innerHTML = `
+        <strong>Aprendiz:</strong> ${learnerName}<br>
+        <strong>Documento:</strong> ${learnerDocument}<br>
+        <strong>Ficha:</strong> ${ficheNumber}<br>
+        <strong>Resultado:</strong> ${outcomeText.substring(0, 50)}...
+      `;
+
+      document.getElementById('modalJustification').value = '';
+      document.getElementById('omissionModal').classList.add('open');
+    }
+
+    function closeModal() {
+      document.getElementById('omissionModal').classList.remove('open');
+      pendingOmission = null;
+    }
+
+    async function confirmOmission() {
+      if (!pendingOmission) return;
+
+      const justification = document.getElementById('modalJustification').value.trim();
+      const omitEverywhere = document.getElementById('omitEverywhere').checked;
+
+      if (!justification) {
+        showError('Por favor ingrese una justificación');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/auditoria/omisiones', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            scheduleId: pendingOmission.scheduleId,
+            learnerDocument: pendingOmission.learnerDocument,
+            learnerName: pendingOmission.learnerName,
+            ficheNumber: pendingOmission.ficheNumber,
+            outcomeText: pendingOmission.outcomeText,
+            justification,
+            omitEverywhere
+          })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) throw new Error(result.error || 'Error al agregar omisión');
+
+        showSuccess(result.message || 'Aprendiz omitido correctamente');
+        closeModal();
+        loadOmissions();
+        loadState(); // Recargar vencidos para actualizar la vista
+
+      } catch (error) {
+        showError('Error: ' + error.message);
+      }
+    }
+
+    async function loadOmissions() {
+      try {
+        const response = await fetch('/api/auditoria/omisiones/agrupadas');
+        const result = await response.json();
+
+        if (!response.ok) throw new Error(result.error || 'Error cargando omisiones');
+
+        allOmissionsGrouped = result.data || [];
+        renderOmissions(allOmissionsGrouped);
+
+      } catch (error) {
+        showError('Error: ' + error.message);
+        document.getElementById('omissionsResults').innerHTML = '<div class="empty-state">Error al cargar omisiones</div>';
+      }
+    }
+
+    function renderOmissions(data) {
+      if (data.length === 0) {
+        document.getElementById('omissionsResults').innerHTML = `
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+            <p>No hay aprendices omitidos</p>
+          </div>`;
+        return;
+      }
+
+      // Reorganizar: agrupar por ficha y luego por resultado
+      const reorganized = data.map(fiche => {
+        // Agrupar omisiones por outcomeText dentro de la ficha
+        const outcomesGrouped = {};
+        fiche.omissions.forEach(o => {
+          const key = o.outcomeText || 'Sin resultado';
+          if (!outcomesGrouped[key]) {
+            outcomesGrouped[key] = {
+              outcomeText: key,
+              omissions: []
+            };
+          }
+          outcomesGrouped[key].omissions.push(o);
+        });
+
+        return {
+          ficheNumber: fiche.ficheNumber,
+          outcomes: Object.values(outcomesGrouped),
+          totalOmissions: fiche.omissions.length
+        };
+      });
+
+      document.getElementById('omissionsResults').innerHTML = reorganized.map(fiche => {
+        return `
+          <div class="fiche-group">
+            <div class="fiche-header" onclick="toggleFiche(this)">
+              <span class="fiche-number">📁 Ficha ${fiche.ficheNumber}</span>
+              <div class="fiche-stats">
+                <span>${fiche.outcomes.length} resultado${fiche.outcomes.length !== 1 ? 's' : ''}</span>
+                <span>${fiche.totalOmissions} omitido${fiche.totalOmissions !== 1 ? 's' : ''}</span>
+              </div>
+              <span class="toggle">▼</span>
+            </div>
+            <div class="fiche-content">
+              ${fiche.outcomes.map(outcome => `
+                <div class="outcome-card">
+                  <div class="outcome-header" onclick="toggleOutcome(this)">
+                    <span class="outcome">${outcome.outcomeText.substring(0, 60)}${outcome.outcomeText.length > 60 ? '...' : ''}</span>
+                    <span class="badge badge-gray">${outcome.omissions.length} omitido${outcome.omissions.length !== 1 ? 's' : ''}</span>
+                    <span class="toggle">▼</span>
+                  </div>
+                  <div class="outcome-body">
+                    <div class="learners-list">
+                      ${outcome.omissions.map(o => `
+                        <div class="learner-item">
+                          <div class="learner-info">
+                            <span class="learner-name">${o.learnerName || 'Sin nombre'}</span>
+                            <span class="learner-doc">📄 ${o.documentNumber}</span>
+                          </div>
+                          <button class="omit-btn" onclick="removeOmission('${o.schedule}', '${o.documentNumber}')">Desomitir</button>
+                        </div>
+                        <div class="justification" style="padding: 8px 12px; background: #f8f9fa; border-top: 1px solid #eee;">
+                          <div style="font-size:11px;color:#666;margin-bottom:4px;">Justificación: ${o.justification || 'Sin justificación'}</div>
+                          <div style="font-size:10px;color:#999;">
+                            ${new Date(o.createdAt).toLocaleString('es-CO')}
+                            ${o.createdBy ? ` | Por: ${o.createdBy}` : ''}
+                          </div>
+                        </div>
+                      `).join('')}
+                    </div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function filterOmissions() {
+      const search = document.getElementById('searchOmissions').value.toLowerCase();
+
+      const filtered = allOmissionsGrouped.map(fiche => ({
+        ...fiche,
+        omissions: fiche.omissions.filter(o =>
+          fiche.ficheNumber.includes(search) ||
+          o.documentNumber.includes(search) ||
+          (o.learnerName || '').toLowerCase().includes(search) ||
+          (o.outcomeText || '').toLowerCase().includes(search)
+        )
+      })).filter(f => f.omissions.length > 0);
+
+      renderOmissions(filtered);
+    }
+
+    async function addOmission() {
+      const scheduleId = document.getElementById('scheduleId').value.trim();
+      const learnerDocument = document.getElementById('learnerDocument').value.trim();
+      const learnerName = document.getElementById('learnerName').value.trim();
+      const ficheNumber = document.getElementById('ficheNumber').value.trim();
+      const justification = document.getElementById('justification').value.trim();
+
+      if (!scheduleId || !learnerDocument) {
+        showError('Por favor complete los campos obligatorios');
+        return;
+      }
+
+      if (!justification) {
+        showError('Por favor ingrese una justificación');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/auditoria/omisiones', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ scheduleId, learnerDocument, learnerName, ficheNumber, outcomeText: '', justification })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) throw new Error(result.error || 'Error al agregar omisión');
+
+        showSuccess('Aprendiz omitido correctamente');
+        document.getElementById('scheduleId').value = '';
+        document.getElementById('learnerDocument').value = '';
+        document.getElementById('learnerName').value = '';
+        document.getElementById('ficheNumber').value = '';
+        document.getElementById('justification').value = '';
+
+        // Recargar omisiones
+        loadOmissions();
+
+      } catch (error) {
+        showError('Error: ' + error.message);
+      }
+    }
+
+    async function removeOmission(scheduleId, learnerDocument) {
+      if (!confirm('¿Está seguro de desomitir este aprendiz?')) return;
+
+      try {
+        const response = await fetch(`/api/auditoria/omisiones/${scheduleId}/${learnerDocument}`, {
+          method: 'DELETE'
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) throw new Error(result.error || 'Error al eliminar omisión');
+
+        showSuccess('Aprendiz desomitido correctamente');
+        loadOmissions();
+
+      } catch (error) {
+        showError('Error: ' + error.message);
+      }
+    }
+
+    async function loadHistory() {
+      try {
+        const response = await fetch('/api/auditoria/historial?limit=50');
+        const result = await response.json();
+
+        if (!response.ok) throw new Error(result.error || 'Error cargando historial');
+
+        const logs = result.data || [];
+        renderHistory(logs);
+
+      } catch (error) {
+        showError('Error: ' + error.message);
+        document.getElementById('historyResults').innerHTML = '<div class="empty-state">Error al cargar historial</div>';
+      }
+    }
+
+    function renderHistory(logs) {
+      if (logs.length === 0) {
+        document.getElementById('historyResults').innerHTML = `
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+            <p>No hay historial de auditorías</p>
+            <p style="font-size: 13px; margin-top: 10px;">Ejecuta una auditoría con <code>skipSaveLog=false</code> para generar registros</p>
+          </div>`;
+        return;
+      }
+
+      document.getElementById('historyResults').innerHTML = logs.map((log, index) => {
+        const date = new Date(log.executionDate).toLocaleString('es-CO', {
+          weekday: 'short',
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        const summary = log.summary || {};
+        const hasIssues = (log.totalFichesWithIssues || 0) > 0;
+        const severityClass = (log.totalVencidosOutcomes || 0) > 10 ? 'critical' : (log.totalVencidosOutcomes || 0) > 0 ? 'warning' : 'success';
+
+        return `
+          <div class="history-item">
+            <div class="history-header" onclick="toggleHistoryDetail(${index})">
+              <div class="history-info">
+                <div class="history-date">📅 ${date}</div>
+                <div class="history-stats">
+                  <div class="history-stat ${severityClass}">
+                    <span class="badge">${log.totalFichesWithIssues || 0}</span> fichas
+                  </div>
+                  <div class="history-stat ${severityClass}">
+                    <span class="badge">${log.totalOutcomesPending || 0}</span> pendientes
+                  </div>
+                  ${log.totalVencidosOutcomes ? `
+                    <div class="history-stat critical">
+                      <span class="badge">⚠️ ${log.totalVencidosOutcomes}</span> vencidos
+                    </div>
+                  ` : ''}
+                  ${summary.totalMissingLearners ? `
+                    <div class="history-stat">
+                      <span class="badge">${summary.totalMissingLearners}</span> aprendices
+                    </div>
+                  ` : ''}
+                </div>
+              </div>
+              <span class="history-toggle" id="history-toggle-${index}">▼</span>
+            </div>
+            <div class="history-details" id="history-detail-${index}">
+              ${hasIssues ? renderHistoryDetail(log) : '<p style="color: #666; font-style: italic;">No se detectaron problemas en esta auditoría.</p>'}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderHistoryDetail(log) {
+      const summary = log.summary || {};
+      let html = '';
+
+      // Summary cards
+      html += `
+        <div class="history-summary-grid">
+          <div class="history-summary-card">
+            <div class="number">${summary.fichesProcessed || 0}</div>
+            <div class="label">Fichas Procesadas</div>
+          </div>
+          <div class="history-summary-card">
+            <div class="number">${summary.outcomesRated || 0}</div>
+            <div class="label">Resultados Calificados</div>
+          </div>
+          <div class="history-summary-card">
+            <div class="number" style="color: #ffc107;">${summary.outcomesPending || 0}</div>
+            <div class="label">Resultados Pendientes</div>
+          </div>
+          ${summary.totalRowsEnFormacion ? `
+            <div class="history-summary-card">
+              <div class="number">${summary.totalRowsEnFormacion}</div>
+              <div class="label">Aprendices En Formación</div>
+            </div>
+          ` : ''}
+        </div>
+      `;
+
+      // Fichas con detalles
+      if (log.details && log.details.length > 0) {
+        html += '<div class="history-fiches">';
+        html += '<h4 style="color: #333; margin-bottom: 10px; font-size: 14px;">Fichas con Problemas Detectados</h4>';
+
+        log.details.forEach((fiche, ficheIdx) => {
+          const pendingCount = fiche.pendingOutcomes?.length || 0;
+          html += `
+            <div class="history-fiche-item">
+              <div class="history-fiche-header" onclick="toggleHistoryFiche(${ficheIdx})">
+                <span class="history-fiche-number">📁 Ficha ${fiche.ficheNumber}</span>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                  <span class="history-fiche-stats">
+                    ${pendingCount} resultado${pendingCount !== 1 ? 's' : ''} pendiente${pendingCount !== 1 ? 's' : ''}
+                  </span>
+                  <span class="history-fiche-toggle" id="history-fiche-toggle-${ficheIdx}">▼</span>
+                </div>
+              </div>
+              <div class="history-fiche-outcomes" id="history-fiche-outcomes-${ficheIdx}">
+                ${renderHistoryFicheOutcomes(fiche)}
+              </div>
+            </div>
+          `;
+        });
+
+        html += '</div>';
+      }
+
+      // Vencidos summary
+      if (log.vencidosOutcomes && log.vencidosOutcomes.length > 0) {
+        html += `
+          <div style="margin-top: 15px; padding: 12px; background: #fff3cd; border-radius: 6px; border-left: 4px solid #ffc107;">
+            <strong style="color: #856404;">⚠️ ${log.vencidosOutcomes.length} Resultados Vencidos</strong>
+            <div style="margin-top: 8px; font-size: 12px; color: #856404;">
+              ${log.vencidosOutcomes.slice(0, 5).map(v => `• ${v.instructorName || 'Sin instructor'}: ${v.outcomeText.substring(0, 40)}... (${v.daysOverdue} días)`).join('<br>')}
+              ${log.vencidosOutcomes.length > 5 ? `<br>... y ${log.vencidosOutcomes.length - 5} más` : ''}
+            </div>
+          </div>
+        `;
+      }
+
+      return html;
+    }
+
+    function renderHistoryFicheOutcomes(fiche) {
+      if (!fiche.pendingOutcomes || fiche.pendingOutcomes.length === 0) {
+        return '<p style="color: #999; font-size: 12px;">Sin detalles de resultados</p>';
+      }
+
+      return fiche.pendingOutcomes.map(outcome => {
+        const isTotalMissing = outcome.isTotalMissing;
+        const learnerCount = outcome.totalLearners || 0;
+        const missingLearners = outcome.missingLearners || [];
+
+        let learnersPreview = '';
+        if (isTotalMissing) {
+          learnersPreview = `
+            <div class="learners-preview">
+              <span style="color: #856404; font-style: italic;">⚠️ Resultado sin evaluar (${learnerCount} aprendices)</span>
+            </div>
+          `;
+        } else if (missingLearners.length > 0) {
+          const displayLearners = missingLearners.slice(0, 5);
+          learnersPreview = `
+            <div class="learners-preview">
+              <span style="color: #666; font-size: 11px;">Aprendices sin nota:</span>
+              <div class="learners-list">
+                ${displayLearners.map(l => {
+                  const isTotal = l.document === 'Resultado sin evaluar';
+                  return `<span class="learner-tag ${isTotal ? 'total' : ''}">${l.name || 'Sin nombre'} ${!isTotal ? `(${l.document})` : ''}</span>`;
+                }).join('')}
+                ${missingLearners.length > 5 ? `<span class="learner-tag">+${missingLearners.length - 5} más</span>` : ''}
+              </div>
+            </div>
+          `;
+        }
+
+        const fend = outcome.fend ? new Date(outcome.fend).toLocaleDateString('es-CO') : 'Sin fecha';
+
+        return `
+          <div class="history-outcome-item">
+            <div class="outcome-text">${outcome.outcomeText}</div>
+            <div class="outcome-meta">
+              <span>📅 Fin: ${fend}</span>
+              <span>👥 ${learnerCount} aprendices</span>
+              ${outcome.scheduleId ? `<span>ID: ${outcome.scheduleId.toString().substring(0, 8)}...</span>` : ''}
+            </div>
+            ${learnersPreview}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleHistoryDetail(index) {
+      const detail = document.getElementById(`history-detail-${index}`);
+      const toggle = document.getElementById(`history-toggle-${index}`);
+      detail.classList.toggle('open');
+      toggle.classList.toggle('open');
+    }
+
+    function toggleHistoryFiche(index) {
+      const outcomes = document.getElementById(`history-fiche-outcomes-${index}`);
+      const toggle = document.getElementById(`history-fiche-toggle-${index}`);
+      outcomes.classList.toggle('open');
+      toggle.classList.toggle('open');
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('error');
+      el.textContent = msg;
+      el.style.display = 'block';
+      document.getElementById('success').style.display = 'none';
+      setTimeout(() => el.style.display = 'none', 5000);
+    }
+
+    function showSuccess(msg) {
+      const el = document.getElementById('success');
+      el.textContent = msg;
+      el.style.display = 'block';
+      document.getElementById('error').style.display = 'none';
+      setTimeout(() => el.style.display = 'none', 3000);
+    }
+
+    // Cerrar modal con ESC
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    // Cerrar modal al hacer clic fuera
+    document.getElementById('omissionModal').addEventListener('click', (e) => {
+      if (e.target.id === 'omissionModal') closeModal();
+    });
+
+    // Funciones de Fichas Fallidas
+    async function loadFailedFiches() {
+      try {
+        const response = await fetch('/api/auditoria/fiches/failed');
+        const result = await response.json();
+
+        if (!response.ok) throw new Error(result.error || 'Error cargando fichas fallidas');
+
+        renderFailedFiches(result.data || []);
+      } catch (error) {
+        console.error('Error cargando fichas fallidas:', error);
+        // Silencioso - no mostrar error en la UI si falla
+        document.getElementById('failedFichesResults').innerHTML = '';
+      }
+    }
+
+    function renderFailedFiches(data) {
+      if (data.length === 0) {
+        document.getElementById('failedFichesResults').innerHTML = `
+          <p style="color:#856404;font-style:italic;text-align:center;padding:20px;">No hay fichas fallidas registradas</p>
+        `;
+        return;
+      }
+
+      document.getElementById('failedFichesResults').innerHTML = `
+        <div style="background:white;border-radius:8px;overflow:hidden;">
+          <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead>
+              <tr style="background:#f8f9fa;border-bottom:2px solid #ffc107;">
+                <th style="padding:10px 12px;text-align:left;">Ficha</th>
+                <th style="padding:10px 12px;text-align:left;">Error</th>
+                <th style="padding:10px 12px;text-align:center;">Último Intento</th>
+                <th style="padding:10px 12px;text-align:center;">Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.map(f => `
+                <tr style="border-bottom:1px solid #eee;">
+                  <td style="padding:10px 12px;font-weight:500;color:#856404;">${f.ficheNumber}</td>
+                  <td style="padding:10px 12px;color:#666;font-size:12px;">${f.error || 'Sin descripción'}</td>
+                  <td style="padding:10px 12px;text-align:center;font-size:11px;color:#888;">${new Date(f.lastAttemptAt).toLocaleString('es-CO')}</td>
+                  <td style="padding:10px 12px;text-align:center;">
+                    <button onclick="omitFailedFiche('${f.ficheNumber}')" style="padding:4px 10px;background:#dc3545;color:white;border:none;border-radius:4px;cursor:pointer;font-size:11px;">Omitir</button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    async function omitFailedFiche(ficheNumber) {
+      if (!confirm(`¿Omitir la ficha ${ficheNumber}? Se agregará a la lista de fichas excluidas.`)) return;
+
+      try {
+        const response = await fetch(`/api/auditoria/fiches/failed/${ficheNumber}`, {
+          method: 'DELETE'
+        });
+        const result = await response.json();
+
+        if (!response.ok) throw new Error(result.error || 'Error al omitir ficha');
+
+        showSuccess(result.message);
+        loadFailedFiches();
+        loadExcludedFiches(); // También recargar excluidas
+      } catch (error) {
+        showError('Error: ' + error.message);
+      }
+    }
+
+    // Funciones de Fichas Excluidas
+    async function loadExcludedFiches() {
+      try {
+        const response = await fetch('/api/auditoria/fiches/excluded');
+        const result = await response.json();
+
+        if (!response.ok) throw new Error(result.error || 'Error cargando fichas excluidas');
+
+        renderExcludedFiches(result.data || []);
+      } catch (error) {
+        showError('Error: ' + error.message);
+        document.getElementById('excludedResults').innerHTML = '<div class="empty-state">Error al cargar fichas excluidas</div>';
+      }
+    }
+
+    function renderExcludedFiches(data) {
+      if (data.length === 0) {
+        document.getElementById('excludedResults').innerHTML = `
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+            <p>No hay fichas excluidas</p>
+          </div>`;
+        return;
+      }
+
+      document.getElementById('excludedResults').innerHTML = `
+        <div style="background:white;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);overflow:hidden;">
+          <table style="width:100%;border-collapse:collapse;font-size:14px;">
+            <thead>
+              <tr style="background:#f8f9fa;border-bottom:2px solid #dee2e6;">
+                <th style="padding:12px 15px;text-align:left;">Ficha</th>
+                <th style="padding:12px 15px;text-align:left;">Razón</th>
+                <th style="padding:12px 15px;text-align:center;">Fecha</th>
+                <th style="padding:12px 15px;text-align:center;">Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.map(f => `
+                <tr style="border-bottom:1px solid #eee;">
+                  <td style="padding:12px 15px;font-weight:500;">${f.ficheNumber}</td>
+                  <td style="padding:12px 15px;color:#666;">${f.reason || 'Sin justificación'}</td>
+                  <td style="padding:12px 15px;text-align:center;font-size:12px;color:#888;">${new Date(f.createdAt).toLocaleDateString('es-CO')}</td>
+                  <td style="padding:12px 15px;text-align:center;">
+                    <button onclick="includeFiche('${f.ficheNumber}')" style="padding:6px 14px;background:#28a745;color:white;border:none;border-radius:4px;cursor:pointer;font-size:12px;">Reincluir</button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    async function excludeFiche() {
+      const ficheNumber = document.getElementById('excludeFicheNumber').value.trim();
+      const reason = document.getElementById('excludeReason').value.trim();
+      if (!ficheNumber) {
+        showError('Ingrese un número de ficha');
+        return;
+      }
+
+      if (!confirm(`¿Excluir la ficha ${ficheNumber} de la auditoría?`)) return;
+
+      try {
+        const response = await fetch('/api/auditoria/fiches/exclude', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ficheNumber, reason })
+        });
+        const result = await response.json();
+
+        if (!response.ok) throw new Error(result.error || 'Error al excluir ficha');
+
+        showSuccess(result.message);
+        document.getElementById('excludeFicheNumber').value = '';
+        document.getElementById('excludeReason').value = '';
+        loadExcludedFiches();
+      } catch (error) {
+        showError('Error: ' + error.message);
+      }
+    }
+
+    async function excludeMultipleFiches() {
+      const input = document.getElementById('excludeMultipleFiches').value.trim();
+      const reason = document.getElementById('excludeMultipleReason').value.trim() || 'Fichas excluidas en lote';
+
+      if (!input) {
+        showError('Por favor ingrese al menos un número de ficha');
+        return;
+      }
+
+      // Separar por coma, espacio o salto de línea
+      const fichas = input.split(/[,\s\n]+/).filter(f => f.trim()).map(f => f.trim());
+
+      if (fichas.length === 0) {
+        showError('No se encontraron números de ficha válidos');
+        return;
+      }
+
+      if (!confirm(`¿Excluir ${fichas.length} fichas de la auditoría?\n\n${fichas.join(', ')}`)) return;
+
+      let successCount = 0;
+      let failCount = 0;
+      const errors = [];
+
+      for (const ficheNumber of fichas) {
+        try {
+          const response = await fetch('/api/auditoria/fiches/exclude', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ficheNumber, reason })
+          });
+
+          const result = await response.json();
+
+          if (!response.ok) {
+            errors.push(`${ficheNumber}: ${result.error || 'Error'}`);
+            failCount++;
+          } else {
+            successCount++;
+          }
+        } catch (error) {
+          errors.push(`${ficheNumber}: ${error.message}`);
+          failCount++;
+        }
+      }
+
+      // Limpiar campo
+      document.getElementById('excludeMultipleFiches').value = '';
+
+      // Mostrar resultado
+      if (failCount === 0) {
+        showSuccess(`Todas las ${successCount} fichas fueron excluidas correctamente`);
+      } else {
+        showError(`${successCount} fichas excluidas, ${failCount} con errores:\n${errors.join('\n')}`);
+      }
+
+      loadExcludedFiches();
+    }
+
+    async function includeFiche(ficheNumber) {
+      if (!confirm(`¿Reincluir la ficha ${ficheNumber} en la auditoría?`)) return;
+
+      try {
+        const response = await fetch('/api/auditoria/fiches/include', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ficheNumber })
+        });
+        const result = await response.json();
+
+        if (!response.ok) throw new Error(result.error || 'Error al reincluir ficha');
+
+        showSuccess(result.message);
+        loadExcludedFiches();
+      } catch (error) {
+        showError('Error: ' + error.message);
+      }
+    }
+
+    // Funciones de Inconsistencias
+    async function loadInconsistencies() {
+      try {
+        const response = await fetch('/api/auditoria/historial?limit=1');
+        const result = await response.json();
+
+        if (!response.ok) throw new Error(result.error || 'Error cargando inconsistencias');
+
+        const logs = result.data || [];
+        const allInconsistencies = [];
+
+        // Acumular inconsistencias de todos los logs
+        for (const log of logs) {
+          if (log.inconsistencias && log.inconsistencias.length > 0) {
+            allInconsistencies.push(...log.inconsistencias);
+          }
+        }
+
+        renderInconsistencies(allInconsistencies);
+      } catch (error) {
+        showError('Error: ' + error.message);
+        document.getElementById('inconsistenciesResults').innerHTML = '<div class="empty-state">Error al cargar inconsistencias</div>';
+      }
+    }
+
+    function renderInconsistencies(data) {
+      if (data.length === 0) {
+        document.getElementById('inconsistenciesResults').innerHTML = `
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+            <p>No se encontraron inconsistencias</p>
+          </div>`;
+        return;
+      }
+
+      // Agrupar por ficha
+      const grouped = {};
+      data.forEach(inc => {
+        const key = inc.ficheNumber || 'Sin ficha';
+        if (!grouped[key]) {
+          grouped[key] = {
+            ficheNumber: key,
+            ficheId: inc.ficheId,
+            inconsistencias: []
+          };
+        }
+        grouped[key].inconsistencias.push(inc);
+      });
+
+      document.getElementById('inconsistenciesResults').innerHTML = Object.values(grouped).map(fiche => `
+        <div class="fiche-group">
+          <div class="fiche-header" onclick="toggleFiche(this)">
+            <span class="fiche-number">📁 Ficha ${fiche.ficheNumber}</span>
+            <div class="fiche-stats">
+              <span>${fiche.inconsistencias.length} inconsistencia${fiche.inconsistencias.length !== 1 ? 's' : ''}</span>
+            </div>
+            <span class="toggle">▼</span>
+          </div>
+          <div class="fiche-content">
+            ${fiche.inconsistencias.map(inc => `
+              <div class="outcome-card" style="border-left-color: #dc3545;">
+                <div style="padding: 12px;">
+                  <p style="margin: 0 0 5px 0; font-weight: 500; color: #333;">${inc.outcomeText}</p>
+                  <p style="margin: 0 0 5px 0; font-size: 13px; color: #666;">
+                    <strong>Instructor:</strong> ${inc.instructorName || 'Sin instructor'}<br>
+                    ${inc.instructorEmail ? `<strong>Email:</strong> ${inc.instructorEmail}<br>` : ''}
+                    <strong>Razón:</strong> ${inc.reason || 'No encontrado en Excel'}
+                  </p>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Funciones del Cron
+    async function loadCronStatus() {
+      try {
+        const response = await fetch('/api/auditoria/cron/status');
+        const data = await response.json();
+        updateCronUI(data);
+      } catch (error) {
+        console.error('Error cargando estado del cron:', error);
+      }
+    }
+
+    function updateCronUI(data) {
+      const statusEl = document.getElementById('cronStatus');
+      const btnEnable = document.getElementById('btnEnableCron');
+      const btnDisable = document.getElementById('btnDisableCron');
+
+      const indicator = statusEl.querySelector('.indicator');
+      const statusText = statusEl.querySelector('.status-text');
+
+      if (data.enabled && data.active) {
+        indicator.className = 'indicator active';
+        statusText.className = 'status-text enabled';
+        statusText.textContent = 'Cron activo';
+        btnEnable.disabled = true;
+        btnDisable.disabled = false;
+      } else {
+        indicator.className = 'indicator inactive';
+        statusText.className = 'status-text disabled';
+        statusText.textContent = 'Cron desactivado';
+        btnEnable.disabled = false;
+        btnDisable.disabled = true;
+      }
+    }
+
+    async function toggleCron(enabled) {
+      try {
+        const response = await fetch('/api/auditoria/cron/toggle', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled })
+        });
+        const data = await response.json();
+        updateCronUI(data);
+        showSuccess(data.message);
+      } catch (error) {
+        showError('Error al cambiar estado del cron: ' + error.message);
+      }
+    }
+
+    async function runAuditNow() {
+      if (!confirm('¿Ejecutar la auditoría ahora? El proceso puede tardar varios minutos.')) return;
+
+      const btn = document.getElementById('btnRunAudit');
+      btn.disabled = true;
+      btn.textContent = '⏳ Ejecutando...';
+
+      try {
+        const response = await fetch('/api/auditoria/cron/run', { method: 'POST' });
+        const data = await response.json();
+
+        if (!response.ok) throw new Error(data.error || 'Error al ejecutar');
+
+        showSuccess(data.message);
+      } catch (error) {
+        showError('Error: ' + error.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '▶ Ejecutar ahora';
+      }
+    }
+
+    function refreshCronStatus() {
+      loadCronStatus();
+      showSuccess('Estado del cron actualizado');
+    }
+
+    // Funciones del Email
+    async function loadEmailStatus() {
+      try {
+        const response = await fetch('/api/auditoria/email/status');
+        const data = await response.json();
+        updateEmailUI(data);
+      } catch (error) {
+        console.error('Error cargando estado del email:', error);
+      }
+    }
+
+    function updateEmailUI(data) {
+      const statusEl = document.getElementById('emailStatus');
+      const btnEnable = document.getElementById('btnEnableEmail');
+      const btnDisable = document.getElementById('btnDisableEmail');
+
+      const indicator = statusEl.querySelector('.indicator');
+      const statusText = statusEl.querySelector('.status-text');
+
+      if (data.enabled) {
+        indicator.className = 'indicator active';
+        statusText.className = 'status-text enabled';
+        statusText.textContent = 'Email activo';
+        btnEnable.disabled = true;
+        btnDisable.disabled = false;
+      } else {
+        indicator.className = 'indicator inactive';
+        statusText.className = 'status-text disabled';
+        statusText.textContent = 'Email desactivado';
+        btnEnable.disabled = false;
+        btnDisable.disabled = true;
+      }
+    }
+
+    async function toggleEmail(enabled) {
+      try {
+        const response = await fetch('/api/auditoria/email/toggle', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled })
+        });
+        const data = await response.json();
+        updateEmailUI(data);
+        showSuccess(data.message);
+      } catch (error) {
+        showError('Error al cambiar estado del email: ' + error.message);
+      }
+    }
+
+    // Funciones de Plantilla de Email
+    let emailTemplateDefaults = {};
+
+    async function loadEmailTemplate() {
+      try {
+        const response = await fetch('/api/auditoria/email/template');
+        const result = await response.json();
+        emailTemplateDefaults = result.defaults || {};
+        populateTemplateForm(result.data);
+      } catch (error) {
+        console.error('Error cargando plantilla:', error);
+        showError('Error cargando plantilla de correo');
+      }
+    }
+
+    function populateTemplateForm(data) {
+      document.getElementById('tplSubject').value = data.subject || '';
+      document.getElementById('tplContent').value = data.content || '';
+    }
+
+    function getTemplateFromForm() {
+      return {
+        subject: document.getElementById('tplSubject').value.trim(),
+        content: document.getElementById('tplContent').value.trim()
+      };
+    }
+
+    async function saveEmailTemplate() {
+      try {
+        const template = getTemplateFromForm();
+        const response = await fetch('/api/auditoria/email/template', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(template)
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Error al guardar');
+        showSuccess('Plantilla guardada correctamente');
+      } catch (error) {
+        showError('Error: ' + error.message);
+      }
+    }
+
+    async function resetEmailTemplate() {
+      if (!confirm('¿Restaurar todos los campos a los valores por defecto?')) return;
+      try {
+        const response = await fetch('/api/auditoria/email/template', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(emailTemplateDefaults)
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Error al restaurar');
+        populateTemplateForm(emailTemplateDefaults);
+        showSuccess('Plantilla restaurada a valores por defecto');
+      } catch (error) {
+        showError('Error: ' + error.message);
+      }
+    }
+
+    // Cargar estado del cron y email al iniciar la página
+    loadCronStatus();
+    loadEmailStatus();
+
+    // Recargar automáticamente cada 5 minutos
+    setInterval(() => {
+      const activeTab = document.querySelector('.tab.active').textContent;
+      if (activeTab.includes('Vencidos')) loadState();
+      else if (activeTab.includes('Omitidos')) loadOmissions();
+    }, 300000);
+  </script>
+</body>
+</html>

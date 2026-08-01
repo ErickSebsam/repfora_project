@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Asignación de Planeación Pedagógica</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+    }
+    .header {
+      background-color: #008f39;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      border-radius: 6px 6px 0 0;
+      font-size: 20px;
+      font-weight: bold;
+    }
+    .content {
+      padding: 20px;
+    }
+    .footer {
+      font-size: 12px;
+      color: #777;
+      text-align: center;
+      margin-top: 30px;
+      border-top: 1px solid #eee;
+      padding-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      REPFORA - PLANEACIÓN PEDAGÓGICA
+    </div>
+    <div class="content">
+      <p>Cordial saludo, <strong>{{name}}</strong>.</p>
+      <p>La coordinación académica le informa que se ha asignado y confirmado su participación en la planeación pedagógica de la siguiente ficha:</p>
+      
+      <table style="width: 100%; border-collapse: collapse; margin: 20px 0; border: 1px solid #e0e0e0; border-radius: 4px;">
+        <tr style="background-color: #fcfcfc;">
+          <td style="padding: 10px; font-weight: bold; width: 120px; border-bottom: 1px solid #e0e0e0;">Ficha:</td>
+          <td style="padding: 10px; border-bottom: 1px solid #e0e0e0; color: #008f39; font-weight: bold;">{{fiche}}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px; font-weight: bold;">Programa:</td>
+          <td style="padding: 10px; color: #555;">{{programName}}</td>
+        </tr>
+      </table>
+
+      <h3 style="color: #008f39; margin-top: 25px; border-bottom: 2px solid #008f39; padding-bottom: 5px;">Detalles del Resultado Asignado:</h3>
+      
+      {{#each activities}}
+      <div style="background-color: #f9f9f9; border-left: 4px solid #008f39; padding: 15px; margin-bottom: 15px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-top: 1px solid #f0f0f0; border-right: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0;">
+        <p style="margin: 0 0 8px 0; font-size: 13px; color: #666; text-transform: uppercase; font-weight: bold;">FASE: {{phase}}</p>
+        <p style="margin: 0 0 8px 0; font-size: 14px; color: #333;"><strong>Competencia:</strong> {{competenceCode}} - {{competenceName}}</p>
+        <p style="margin: 0 0 8px 0; font-size: 14px; color: #333;"><strong>Resultado (RAP):</strong> {{rapDescription}}</p>
+        <p style="margin: 0 0 10px 0; font-size: 14px; color: #555; background-color: #ffffff; padding: 10px; border-radius: 4px; border: 1px solid #e8e8e8;">
+          <strong>Actividad Pedagógica:</strong> {{activityDescription}}
+        </p>
+        <p style="margin: 0; font-size: 14px;">
+          <strong>Horas Directas:</strong> <span style="background-color: #e8f5e9; color: #2e7d32; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 13px;">{{hoursDirect}} horas</span>
+        </p>
+      </div>
+      {{/each}}
+
+      <p style="margin-top: 25px;"><strong>Es de suma importancia</strong> que ingrese a la plataforma a la brevedad posible para <strong>realizar el diligenciamiento de su planeación pedagógica</strong>, definiendo las fechas, horas y detalles técnicos de las actividades que le han sido asignadas. Este paso es indispensable para el correcto registro de su ejecución formativa.</p>
+
+      <p>Si tiene alguna duda o inconsistencia con esta asignación, comuníquese con el programador de su centro.</p>
+    </div>
+    <div class="footer">
+      Este mensaje fue generado automáticamente por el sistema REPFORA. Por favor no responda a este correo.
+    </div>
+  </div>
+</body>
+</html>

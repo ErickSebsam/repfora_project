@@ -1,8 +1,8 @@
 import Instructor from "../models/Instructor.js";
 import registerAction from "../middlewares/binnacle.js";
 import webToken from "../middlewares/webToken.js";
-import sendEmail from "../utils/emails/sendEmail.js";
 import Schedule from "../models/Schedule.js";
+import sendEmail from "../utils/emails/sendEmail.js";
 
 const instrCtrl = {};
 
@@ -143,11 +143,32 @@ instrCtrl.validateTokenLogin=async(req,res)=>{
 
 //get all instructors
 instrCtrl.getInstrs = async (req, res) => {
-  const { status } = req.query;
+  const { status, q, limit } = req.query;
   try {
-    const instrs = await Instructor.find(status ? { status } : {}).sort({
-      createdAt: -1,
-    });
+    const filter = {};
+    if (status !== undefined) filter.status = Number(status);
+
+    // Búsqueda server-side (autocomplete): parcial e insensible a mayúsculas,
+    // sobre nombre y/o número de documento. Si no llega q, comportamiento de hoy.
+    const qTrim = (q || "").trim();
+    if (qTrim) {
+      filter.$or = [
+        { name: { $regex: qTrim, $options: "i" } },
+        { numdocument: { $regex: qTrim, $options: "i" } },
+      ];
+    }
+
+    // Orden: alfabético por nombre cuando hay q (mejor UX en autocomplete);
+    // sin q, se mantiene el orden cronológico actual (compatible hacia atrás).
+    const sortOptions = qTrim ? { name: 1 } : { createdAt: -1 };
+
+    let query = Instructor.find(filter).sort(sortOptions);
+    if (limit) {
+      const limitNum = Number(limit);
+      if (limitNum > 0) query = query.limit(limitNum);
+    }
+
+    const instrs = await query;
     res.json(instrs);
   } catch (error) {
     res.status(400).json({ msg: "No fue posible terminar la operacion" });
@@ -332,10 +353,9 @@ instrCtrl.changePasswordInst = async (req, res) => {
     res.status(400).json({ msg: "No fue posible terminar la operacion" });
   }
 };
-
 instrCtrl.checkInstructorAvailability = async (req, res) => {
   const { id: instructorId } = req.params;
-  const { dates: datesQuery, shift, currentFiche } = req.query;
+  const { dates: datesQuery, shift, currentFiche,tstart, tend} = req.query;
 
   try {
     if (!datesQuery) {
@@ -350,9 +370,16 @@ instrCtrl.checkInstructorAvailability = async (req, res) => {
     // Define requested time boundaries based on shift
     let reqStart = '07:00';
     let reqEnd = '18:00';
-    if (shift === 'nocturna' || shift === 'night') {
+    if(tstart && tend){
+      reqStart = tstart;
+      reqEnd = tend;
+      
+    } else if (shift === 'nocturna' || shift === 'night') {
       reqStart = '18:00';
       reqEnd = '22:00';
+    } else if (shift === 'mixta_manana') {
+      reqStart = '07:00';
+      reqEnd = '12:00';
     }
 
     // Query active schedules for the instructor
@@ -370,7 +397,14 @@ instrCtrl.checkInstructorAvailability = async (req, res) => {
       }
 
       // Check time overlap: schedule.tstart < reqEnd && schedule.tend > reqStart
-      const timeOverlaps = schedule.tstart < reqEnd && schedule.tend > reqStart;
+      let timeOverlaps = false;
+      if (shift === 'mixta_manana_tarde') {
+        const overlap1 = schedule.tstart < '12:00' && schedule.tend > '07:00';
+        const overlap2 = schedule.tstart < '17:59' && schedule.tend > '13:00';
+        timeOverlaps = overlap1 || overlap2;
+      } else {
+        timeOverlaps = schedule.tstart < reqEnd && schedule.tend > reqStart;
+      }
       if (!timeOverlaps) {
         continue;
       }

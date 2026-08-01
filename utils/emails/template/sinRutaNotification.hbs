@@ -1,0 +1,25 @@
+<html>
+  <head>
+    <style>
+      body { font-family: Arial, sans-serif; color: #333; font-size: 14px; }
+    </style>
+  </head>
+  <body>
+    <p>Cordial saludo, <strong>{{instructorName}}</strong></p>
+    <p>Le informamos que las siguientes fichas a su cargo se encuentran <strong>en ejecucion</strong> pero presentan aprendices <strong>sin ruta de aprendizaje asignada</strong> en SOFIA Plus.</p>
+    <p>Es necesario que ingrese al sistema y asigne la ruta correspondiente a la mayor brevedad posible.</p>
+
+    <p><strong>Fichas sin ruta de aprendizaje:</strong></p>
+    {{#each fichas}}
+    <p>
+      Ficha: <strong>{{this.fichaNumber}}</strong><br>
+      Curso: {{this.courseName}}<br>
+      Aprendices sin ruta: {{this.enTransito}}
+    </p>
+    {{/each}}
+
+    <p>Este reporte fue generado automaticamente a partir del DF-14A de SOFIA Plus. Si ya asigno las rutas, puede ignorar este mensaje.</p>
+
+    <p style="font-size: 12px; color: #666;">Este mensaje fue enviado automaticamente por el sistema REPORA - SENA. No responda a este correo.</p>
+  </body>
+</html>

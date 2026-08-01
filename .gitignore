@@ -60,6 +60,9 @@ build/Release
 # Dependency directories
 tmp
 node_modules/
+graphify-out
+.agents
+skills-lock.json
 backup/
 jspm_packages/
 .env
@@ -208,7 +211,13 @@ REPFORA/
 *.bru
 
 # Google Drive service account credentials (sensitive)
+# utils/uploadFiles/*.json
+frontend/
 utils/uploadFiles/*.json
 
 # Migration scripts (local only)
 scripts/
+
+# Ignorar credenciales y llaves de Google
+uploads/credenciales/
+*.json

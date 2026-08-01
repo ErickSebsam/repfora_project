@@ -1,0 +1,33 @@
+<html>
+  <head>
+    <style>
+      body { font-family: Arial, sans-serif; color: #333; font-size: 14px; }
+    </style>
+  </head>
+  <body>
+    <p>Cordial saludo, <strong>{{instructorName}}</strong></p>
+    <p>Le informamos que su formacion complementaria ha sido <strong>programada</strong> exitosamente.</p>
+
+    <p><strong>Detalles de la programacion:</strong></p>
+    <p>
+      Numero de solicitud: {{numeroSolicitud}}<br>
+      Curso: {{courseName}}<br>
+      Codigo: {{courseCode}}<br>
+      Version: {{courseVersion}}
+    </p>
+
+    <p><strong>Horario asignado:</strong></p>
+    <p>
+      Fecha de inicio: {{fechaInicio}}<br>
+      Fecha de fin: {{fechaFin}}<br>
+      Horario: {{horaInicio}} - {{horaFin}}<br>
+      Dias: {{dias}}<br>
+      Total horas: {{totalHoras}} horas
+      {{#if ambienteNombre}}<br>Ambiente: {{ambienteNombre}}{{/if}}
+    </p>
+
+    <p>Su complementaria se encuentra lista para iniciar segun las fechas y horarios indicados.</p>
+
+    <p style="font-size: 12px; color: #666;">Este mensaje fue enviado automaticamente por el sistema REPORA - SENA. No responda a este correo.</p>
+  </body>
+</html>

@@ -5,6 +5,7 @@ import cors from "cors";
 import compression from "compression";
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
+import path from "path";
 
 import dbConnection from "./database.js";
 import morgan from "morgan";
@@ -40,6 +41,9 @@ import { initCron } from "./services/cronService.js"
 import { initEmailSettings } from "./services/notificationService.js"
 import { routerComplementary } from "./routes/complementary.routes.js"
 import { routerPlanning } from "./routes/planning.routes.js";
+import { routerPlanningVacation } from "./routes/planningVacation.routes.js";
+import { routerPlanningShift } from "./routes/planningShift.routes.js";
+import { routerNotifications } from "./routes/notifications.routes.js";
 
 dotenv.config();
 
@@ -349,6 +353,8 @@ class Server {
     this.app.use(compression());
     this.app.use(morgan("dev"));
     this.app.use(express.static("public"));
+    const UPLOAD_BASE_DIR = process.env.UPLOAD_PATH || "/var/www/repfora/uploads";
+    this.app.use("/uploads", express.static(UPLOAD_BASE_DIR));
     this.app.use(
       fileUpload({
         createParentPath: true,
@@ -476,7 +482,12 @@ class Server {
     this.app.use("/api/auditoria", routerAuditoria);
     this.app.use("/api/storage", routerStorage);
     this.app.use("/api/complementary", routerComplementary);
+    // NOTA: routerPlanningVacation va ANTES de routerPlanning para que /vacations
+    // no sea capturado por el parámetro dinámico /:fiche del router de planeaciones
+    this.app.use("/api/planning/vacations", routerPlanningVacation);
+    this.app.use("/api/planning/shifts", routerPlanningShift);
     this.app.use("/api/planning", routerPlanning);
+    this.app.use("/api/notifications", routerNotifications);
     this.app.use("/admin/audit", routerAdminAudit);
     this.app.use("/life", (req, res) => {
       res.send("life server");

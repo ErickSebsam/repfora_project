@@ -1,0 +1,18 @@
+import * as dotenv from "dotenv";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+const __dirname = dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: join(__dirname, ".env") });
+import dns from "dns";
+dns.setServers(["8.8.8.8", "1.1.1.1"]);
+import mongoose from "mongoose";
+import AppSettings from "./models/AppSettings.js";
+await mongoose.connect(process.env.MONGO_URL);
+const s = await AppSettings.findOne();
+console.log("AppSettings (BD):", JSON.stringify(s, null, 2));
+console.log("EMAIL_ENABLED (.env):", process.env.EMAIL_ENABLED);
+console.log("USE_TEST_RECIPIENT (.env):", process.env.USE_TEST_RECIPIENT);
+console.log("TEST_MAIL_RECIPIENT (.env):", process.env.TEST_MAIL_RECIPIENT);
+console.log("FROM_EMAIL set:", !!process.env.FROM_EMAIL, "| SECURY_EMAIL set:", !!process.env.SECURY_EMAIL);
+await mongoose.disconnect();
+process.exit(0);

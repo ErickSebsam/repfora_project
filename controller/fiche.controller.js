@@ -121,7 +121,6 @@ ficheCtrl.getFichesCoordination = async (req, res) => {
     const fiches = await Fiche.find(consult)
       .populate("program owner coordination")
       .sort({ createdAt: -1 });
-    console.log(fiches);
     res.json(fiches);
   } catch (error) {
     res.status(400).json({ msg: "No fue posible terminar la operacion jejejej" });

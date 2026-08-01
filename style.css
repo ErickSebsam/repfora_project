@@ -1,0 +1,317 @@
+:root {
+  /* ===== Colors ===== */
+  --color_card: #318335;
+  --color_text_card: white;
+  --color_button: #2e7d32;
+  --color_text_button: white;
+  --color_box: #2e7d32;
+  --color_button_closed: black;
+  --color_header: #2e7d32;
+  --color_input: #2e7d32;
+  --color_tooltip: #d4cece;
+}
+
+.style-select {
+  color: var(--color_input) !important;
+  border-color: var(--color_input) !important;
+  outline-color: var(--color_input) !important;
+}
+
+.q-field__control {
+  color: var(--color_input) !important;
+}
+
+.q-item.q-router-link--active,
+.q-item--active {
+  color: var(--color_input) !important;
+}
+
+.style-btn {
+  background-color: var(--color_button) !important;
+  color: var(--color_text_button) !important;
+}
+
+.style-text {
+  text-transform: capitalize !important;
+}
+
+.customEvents {
+  white-space: nowrap;
+  text-overflow: ellipsis !important;
+  overflow: hidden;
+}
+
+/* Configuraci+on para el tooltip */
+
+.tooltip {
+  position: relative;
+}
+
+.open-tooltip {
+  color: var(--color_box);
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.open-tooltip:hover {
+  opacity: 0.7;
+}
+
+.content-tooltip {
+  width: 300px;
+  background: #fff;
+  padding: 10px;
+  position: absolute;
+  top: 80%;
+  left: -40%;
+  border-radius: 5px;
+  visibility: hidden;
+  opacity: 0;
+  transition: 0.2s;
+  z-index: 1;
+  border: 2px solid var(--color_box);
+  -webkit-transition: 0.2s;
+  -moz-transition: 0.2s;
+  -ms-transition: 0.2s;
+  -o-transition: 0.2s;
+}
+
+.content-tooltip .h-tooltip {
+  font-size: 18px;
+  text-transform: capitalize;
+  font-weight: 900;
+}
+
+.content-tooltip .p-tooltip {
+  line-height: 1.4;
+}
+
+.content-tooltip::before {
+  content: "";
+  position: absolute;
+  width: 25px;
+  height: 25px;
+  background: #fff;
+  top: 0;
+  left: 50%;
+  border-radius: 0px;
+  border: 2px solid;
+  border-color: var(--color_box) transparent transparent var(--color_box);
+  transform: translate(-50%, -50%) rotate(45deg);
+  -webkit-transform: translate(-50%, -50%) rotate(45deg);
+  -moz-transform: translate(-50%, -50%) rotate(45deg);
+  -ms-transform: translate(-50%, -50%) rotate(45deg);
+  -o-transform: translate(-50%, -50%) rotate(45deg);
+  -webkit-border-radius: 0px;
+  -moz-border-radius: 0px;
+  -ms-border-radius: 0px;
+  -o-border-radius: 0px;
+}
+
+.tooltip:hover .content-tooltip {
+  visibility: visible;
+  opacity: 1;
+  z-index: 1;
+}
+
+/* Configuraci+on para el tooltip para los eventos */
+.content-tooltip-event {
+  padding: 6px 12px;
+  width: 220px;
+  overflow: hidden;
+  font-size: 12px;
+  height: 310px;
+  overflow-y: auto;
+  background-color: #fffadf;
+} 
+.customEvents {
+  white-space: nowrap;
+  text-overflow: ellipsis !important;
+  overflow: hidden;
+}
+
+.v-popper--theme-menu .v-popper__inner {
+  background: #fff;
+  color: black;
+
+  border-radius: 6px;
+  border: 1px solid #373737 !important;
+  box-shadow: 0 6px 30px rgba(0, 0, 0, .1);
+}
+
+.v-popper--theme-menu .v-popper__arrow-inner {
+  visibility: hidden;
+  border-color: #3a3a3a !important;
+}
+
+.v-popper--theme-menu .v-popper__arrow-outer {
+  border-color: #242424 !important;
+ 
+}
+
+/* Transition */
+
+.v-popper--theme-my-theme.v-popper__popper--hidden {
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity .15s, visibility .15s;
+}
+
+.v-popper--theme-my-theme.v-popper__popper--shown {
+  visibility: visible;
+  opacity: 1;
+  transition: opacity .15s;
+}
+
+.v-popper--theme-my-theme.v-popper__popper--skip-transition {
+  transition: none !important;
+}
+
+
+
+.my-sticky-header-table {
+  /* height or max-height is important */
+  height: 60vh;
+}
+
+.my-sticky-header-table .q-table__top,
+.my-sticky-header-table .q-table__bottom,
+.my-sticky-header-table thead tr:first-child th {
+  background-color: white;
+  color: black;
+  font-weight: 600;
+}
+
+.my-sticky-header-table thead tr th {
+  position: sticky;
+  z-index: 1;
+}
+
+.my-sticky-header-table thead tr:first-child th {
+  top: 0;
+}
+
+/* this is when the loading indicator appears */
+.my-sticky-header-table.q-table--loading thead tr:last-child th {
+  /* height of all previous header rows */
+  top: 48px;
+}
+
+/* prevent scrolling behind sticky top row on focus */
+.my-sticky-header-table tbody {
+  /* height of all previous header rows */
+  scroll-margin-top: 48px;
+}
+
+
+
+.my-sticky-header-table2 {
+  /* height or max-height is important */
+  height: 70vh;
+}
+
+.my-sticky-header-table2 .q-table__top,
+.my-sticky-header-table2 .q-table__bottom,
+.my-sticky-header-table2 thead tr:first-child th {
+  background-color: white;
+  color: black;
+}
+
+.my-sticky-header-table2 thead tr th {
+  position: sticky;
+  z-index: 1;
+}
+
+.my-sticky-header-table2 thead tr:first-child th {
+  top: 0;
+}
+
+/* this is when the loading indicator appears */
+.my-sticky-header-table2.q-table--loading thead tr:last-child th {
+  /* height of all previous header rows */
+  top: 48px;
+}
+
+/* prevent scrolling behind sticky top row on focus */
+.my-sticky-header-table2 tbody {
+  /* height of all previous header rows */
+  scroll-margin-top: 48px;
+}
+
+
+.maxSizeCalender{
+  width: 1500px !important;
+  height: 800px !important;
+}
+
+.q-table__top{
+  padding: 0px !important;
+  margin: 0px !important;
+}
+
+.label-news{
+  word-wrap: break-word;
+  
+}
+.table-reactive{
+  /* Calcular el alto de la tabla dependiendo del alto de la pantalla */ 
+  height: 1000px !important;
+}
+
+
+/* redondear todos los scroll de la pagina */
+.contenedor {
+  margin: 2rem auto;
+  border: 1px solid #aaa;
+  height: 300px;
+  width:90%;
+  max-width: 400px;
+  background: #f1f2f3;
+  overflow:auto;
+  box-sizing: border-box;
+  padding:0 1rem;
+}
+
+/* Estilos para motores Webkit y blink (Chrome, Safari, Opera... )*/
+
+::-webkit-scrollbar {
+  -webkit-appearance: none;
+}
+
+::-webkit-scrollbar:vertical {
+  width:12px;
+}
+
+::-webkit-scrollbar-button:increment,::-webkit-scrollbar-button {
+  display: none;
+} 
+
+::-webkit-scrollbar:horizontal {
+  height: 12px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #bbbbbb;
+  border-radius: 5px;
+  border: 2px solid #f1f2f3;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+}
+
+::-webkit-scrollbar-track {
+  border-radius: 5px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+}
+
+.titleReport{
+  font-size: 26px;
+  font-weight: 600;
+}

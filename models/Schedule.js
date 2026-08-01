@@ -58,7 +58,12 @@ const SchedulesSquema = new Schema(
     environment: {
       type: Schema.Types.ObjectId,
       ref: "Environment",
-      required: true,
+      // En TITULADA el ambiente es obligatorio (además se exige en schedule.validation).
+      // En COMPLEMENTARIA es opcional: cursos tipo CAMPSENA/AULA MÓVIL/virtuales pueden
+      // no tener un ambiente físico fijo (ver scheduleComplementary en complementary.controller).
+      required: function () {
+        return this.scheduleType !== "COMPLEMENTARIA";
+      },
     },
     days: {
       // [0,1,2,3,4,5,6] || ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo']

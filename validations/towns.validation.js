@@ -1,18 +1,20 @@
-
-
 import { check } from "express-validator";
+import jwt from "jsonwebtoken";
 import webToken from "../middlewares/webToken.js";
 import { validateFields } from "../middlewares/validateFields.js";
 
-
-const { validateToken } = webToken;
+const { validateToken, validateTokenComplementaria } = webToken;
 
 const townsVali = {};
 
-
 townsVali.validateHeaders = [
   check("token").custom(async (token) => {
-    await validateToken(token, false);
+    const decoded = jwt.decode(token);
+    if (decoded?.scope === "VERIFY") {
+      await validateTokenComplementaria(token);
+    } else {
+      await validateToken(token, false);
+    }
   }),
   validateFields,
 ];
