@@ -25,8 +25,6 @@ function formatearFechaSofia(fechaInput) {
   return `${day}/${month}/${year}`;
 }
 
-// SOFIA espera el checkbox de días con estos valores exactos.
-// La colección "schedules" guarda los días como números (1=lunes ... 7=domingo, ISO 8601).
 const NOMBRES_DIA_ISO = {
   '1': 'lunes',
   '2': 'martes',
@@ -44,14 +42,10 @@ function normalizarDias(dias) {
     .filter(d => d !== null && d !== undefined)
     .map(d => {
       const texto = String(d).trim().toLowerCase();
-      // Si ya viene como nombre de día (p.ej. "lunes"), se deja igual;
-      // si viene como número (1-7), se traduce al nombre que usa SOFIA.
       return NOMBRES_DIA_ISO[texto] || texto;
     });
 }
 
-// El schedule no tiene un campo único de descripción; se arma a partir de
-// supporttext (ej. "INDUCCION") y observation (ej. "JORNADA NOCHE").
 function construirDescripcion(schedule, fiche) {
   const partes = [schedule.supporttext, schedule.observation]
     .map(p => (p || '').trim())
@@ -61,7 +55,6 @@ function construirDescripcion(schedule, fiche) {
   return `Formación Ficha ${fiche?.number}`;
 }
 
-// Límites (UTC) del mes actual: primer y último día, ambos con hora completa.
 function obtenerLimitesMesActual() {
   const ahora = new Date();
   const inicioMes = new Date(Date.UTC(ahora.getUTCFullYear(), ahora.getUTCMonth(), 1, 0, 0, 0, 0));
@@ -69,13 +62,26 @@ function obtenerLimitesMesActual() {
   return { inicioMes, finMes };
 }
 
-// Una serie de schedules puede empezar en un mes y terminar en otro.
-// Esta función determina si la serie se solapa con el mes actual y,
-// si es así, recorta fstart/fend a los límites del mes actual para
-// que solo se registren en Sofia las sesiones de este mes.
-function recortarAlMesActual(fstart, fend) {
+// 🟢 NUEVA LÓGICA: Extrae los límites de fechas filtrando las sesiones reales del array `events`
+function obtenerLimitesDesdeEventos(events, fstart, fend) {
   const { inicioMes, finMes } = obtenerLimitesMesActual();
 
+  // 1. Intentar filtrar fechas reales dentro de Julio desde 'events'
+  if (events && Array.isArray(events) && events.length > 0) {
+    const eventosDelMes = events
+      .map(e => new Date(e.$date || e))
+      .filter(d => d >= inicioMes && d <= finMes)
+      .sort((a, b) => a - b);
+
+    if (eventosDelMes.length > 0) {
+      return {
+        inicioRecortado: eventosDelMes[0],                   // Primer martes del mes (ej. 07/07/2026)
+        finRecortado: eventosDelMes[eventosDelMes.length - 1] // Último martes del mes
+      };
+    }
+  }
+
+  // 2. Fallback de respaldo si 'events' no traía fechas en este mes
   const inicioEvento = new Date(fstart);
   const finEvento = new Date(fend);
 
@@ -100,10 +106,6 @@ export async function desconectarDB() {
   }
 }
 
-// Trae todas las series de "schedules" que se solapan con el mes actual.
-// Por cada una devuelve las fechas ya recortadas a los límites del mes,
-// para que la serie que cruza de un mes a otro solo aporte las sesiones
-// que corresponden al mes en curso.
 export async function obtenerProgramacionesMesActual() {
   await conectarDB();
   const db = mongoose.connection.db;
@@ -118,8 +120,9 @@ export async function obtenerProgramacionesMesActual() {
   const eventosDelMes = [];
 
   for (const schedule of todosLosSchedules) {
-    const rango = recortarAlMesActual(schedule.fstart, schedule.fend);
-    if (!rango) continue; // La serie no toca el mes actual, se ignora
+    // 🟢 Pasamos schedule.events junto con fstart y fend
+    const rango = obtenerLimitesDesdeEventos(schedule.events, schedule.fstart, schedule.fend);
+    if (!rango) continue; 
 
     const fiche = await fiches.findOne({ _id: schedule.fiche });
     const environment = await environments.findOne({ _id: schedule.environment });
