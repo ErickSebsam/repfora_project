@@ -10,6 +10,7 @@ const {
   validateExistInstr,
   validateUpdateInstr,
   validateHeaders,
+  validateInstrQuery,
   validateActiveInstr,
   validatetokenloginInstru,
 } = instructorVali;
@@ -94,7 +95,7 @@ routerInstructor.get("/:id/availability", [], checkInstructorAvailability);
  *               items:
  *                 $ref: '#/components/schemas/Instructor'
  */
-routerInstructor.get("/", validateHeaders, getInstrs);
+routerInstructor.get("/", validateInstrQuery, getInstrs);
 
 /**
  * @swagger
@@ -392,5 +393,9 @@ routerInstructor.post("/complementary/access/send-code", validateSendCode, sendC
  *         description: Codigo incorrecto, expirado o token invalido
  */
 routerInstructor.post("/complementary/access/verify-code", validateVerifyCode, verifyCode);
+
+// Verificar disponibilidad de instructor para fechas y jornada dadas
+// GET /api/instructors/availability/:id?dates=2026-01-01,2026-01-02&shift=diurna&currentFiche=3065259
+routerInstructor.get("/availability/:id", checkInstructorAvailability);
 
 export { routerInstructor };

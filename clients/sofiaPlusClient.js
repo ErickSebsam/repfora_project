@@ -1,4 +1,6 @@
-import { chromium } from 'playwright';
+// TEMPORALMENTE DESHABILITADO: playwright falla al instalar Chromium durante el build de Docker.
+// Se comenta para permitir el despliegue. Descomentar solo cuando se resuelva la instalación en el servidor.
+// import { chromium } from 'playwright';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -59,7 +61,11 @@ export class SofiaPlusClient {
     this.headless =
       headless ?? (process.env.HEADLESS ? process.env.HEADLESS === 'true' : false);
     this.slowMo = slowMo ?? (process.env.SLOWMO ? parseInt(process.env.SLOWMO, 10) : 100);
-    this.outputDir = process.env.OUTPUTDIR;
+    // Directorio de descargas unificado: OUTPUTDIR (env) con fallback a <cwd>/downloads.
+    // Resuelto a ruta absoluta para no depender del cwd del proceso (cron vs server).
+    this.outputDir = path.resolve(process.env.OUTPUTDIR || path.join(process.cwd(), 'downloads'));
+    // Asegurar que exista (fire-and-forget: no bloquea el constructor)
+    fs.mkdir(this.outputDir, { recursive: true }).catch(() => {});
     this.sofiaUrl = process.env.SOFIA_URL || 'http://senasofiaplus.edu.co/sofia-public/';
     this.retries = retries ?? parseInt(process.env.SOFIA_RETRIES || '3', 10);
     this.retryDelay = retryDelay ?? parseInt(process.env.SOFIA_RETRY_DELAY || '60000', 10);
@@ -143,6 +149,10 @@ export class SofiaPlusClient {
   }
 
   async #initializeBrowser() {
+    // GUARDA: playwright está temporalmente deshabilitado (ver import comentado arriba).
+    // Este cliente no está disponible hasta que se reactive la librería en el servidor.
+    throw new Error("[DESHABILITADO] El cliente de Sofia Plus (playwright/Chromium) no está disponible en este entorno. Contacte al administrador.");
+
     try {
       // Opciones base
       const launchOptions = {

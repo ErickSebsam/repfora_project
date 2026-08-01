@@ -1,0 +1,1 @@
+import{r as e}from"./use-dark-CpuSF0Fg.js";var t=(t,n={},r={})=>e.get(t,{params:n,...r}).then(e=>e.data),n=(t,n)=>e.post(t,n).then(e=>e.data),r=(t,n)=>e.put(t,n).then(e=>e.data),i=t=>e.delete(t).then(e=>e.data),a=(t,n)=>e.post(t,n);export{r as a,a as i,t as n,n as r,i as t};

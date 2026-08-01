@@ -100,5 +100,16 @@ coordinationHelper.validateActiveCoordination = async (id) => {
   }
 };
 
+coordinationHelper.findCoordinationByName = async (name, populateFields = "") => {
+  try {
+    const coordination = await Coordination.findOne({
+      name: name.toUpperCase().trim(),
+      status: 0,
+    }).populate(populateFields);
+    return coordination;
+  } catch (error) {
+    throw new Error("Error al buscar coordinación por nombre");
+  }
+};
 
 export { coordinationHelper };

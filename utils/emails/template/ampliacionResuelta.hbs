@@ -1,0 +1,45 @@
+<html>
+  <head>
+    <style>
+      body { font-family: Arial, sans-serif; color: #333; font-size: 14px; }
+    </style>
+  </head>
+  <body>
+    {{#if aprobada}}
+    <p>Cordial saludo,</p>
+    <p>Le informamos que su solicitud de <strong>ampliacion de fecha</strong> ha sido <strong>aprobada</strong>.</p>
+
+    <p><strong>Detalles de la ficha:</strong></p>
+    <p>
+      {{#if fichaNumber}}Numero de ficha: {{fichaNumber}}<br>{{/if}}
+      {{#if numeroSolicitud}}Numero de solicitud: {{numeroSolicitud}}<br>{{/if}}
+      Curso: {{courseName}}<br>
+      Codigo: {{courseCode}}<br>
+      Version: {{courseVersion}}<br>
+      Fecha de aprobacion: {{resolutionDate}}
+    </p>
+
+    <p>Por favor ingrese al sistema para reprogramar los horarios de la ficha con la nueva fecha de finalizacion.</p>
+    {{else}}
+    <p>Cordial saludo,</p>
+    <p>Le informamos que su solicitud de <strong>ampliacion de fecha</strong> ha sido <strong>rechazada</strong>.</p>
+
+    <p><strong>Detalles de la ficha:</strong></p>
+    <p>
+      {{#if fichaNumber}}Numero de ficha: {{fichaNumber}}<br>{{/if}}
+      {{#if numeroSolicitud}}Numero de solicitud: {{numeroSolicitud}}<br>{{/if}}
+      Curso: {{courseName}}<br>
+      Codigo: {{courseCode}}<br>
+      Version: {{courseVersion}}<br>
+      Fecha de resolucion: {{resolutionDate}}
+    </p>
+
+    <p><strong>Motivo del rechazo:</strong></p>
+    <p>{{observations}}</p>
+
+    <p>Si considera que la situacion lo amerita, puede realizar una nueva solicitud de ampliacion a traves del sistema.</p>
+    {{/if}}
+
+    <p style="font-size: 12px; color: #666;">Este mensaje fue enviado automaticamente por el sistema REPORA - SENA. No responda a este correo.</p>
+  </body>
+</html>

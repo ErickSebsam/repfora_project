@@ -13,6 +13,7 @@ const activityTemplateSchema = new mongoose.Schema({
     materials: [String]
   },
   observations: { type: String },
+  isScheduledInCalendar: { type: Boolean, default: false },
   suggestedInstructor: {
     id: { type: String },
     name: { type: String },
@@ -25,15 +26,17 @@ const activityTemplateSchema = new mongoose.Schema({
   },
   scheduleDetails: {
     assignedDays: [String],
-    shift: { type: String, enum: ['morning', 'afternoon', 'night', '', null] },
+    shift: { type: String, enum: ['morning', 'afternoon', 'night', 'diurna', 'nocturna', 'mixta_manana', 'mixta_manana_tarde', '', null] },
     hoursPerDay: { type: Number },
-    calendarNotes: { type: String }
+    calendarNotes: { type: String },
+    isPublished: { type: Boolean, default: false }
   }
 }, { _id: false });
 
 const rapTemplateSchema = new mongoose.Schema({
   description: { type: String, required: true },
   evaluationCriteria: [String],
+  projectActivity: { type: String },
   pedagogicalActivities: [activityTemplateSchema]
 }, { _id: false });
 
@@ -45,6 +48,8 @@ const competenceTemplateSchema = new mongoose.Schema({
     conceptsAndPrinciples: [String],
     processes: [String]
   },
+  evaluationCriteria: [String],
+  academicRequirements: { type: String, default: "" },
   learningOutcomes: [rapTemplateSchema]
 }, { _id: false });
 

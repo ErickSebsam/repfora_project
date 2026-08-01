@@ -21,6 +21,7 @@ services:
       - ./downloads:/app/downloads
       - ./tmp:/app/tmp
       - ./clients:/app/clients
+      - /var/www/repfora/uploads:/var/www/repfora/uploads
     depends_on:
       - mongo
     networks:

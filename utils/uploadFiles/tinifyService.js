@@ -1,4 +1,7 @@
-import tinify from "tinify";
+// TEMPORALMENTE DESHABILITADO: tinify falla al instalarse en el entorno Docker node:20-slim.
+// Se usaba para comprimir imágenes antes de subirlas. Descomentar cuando se configure la API key
+// y se confirme compatibilidad con el entorno del servidor.
+// import tinify from "tinify";
 import axios from "axios";
 import fs from "fs";
 

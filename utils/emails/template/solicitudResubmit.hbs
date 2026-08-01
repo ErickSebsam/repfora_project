@@ -1,0 +1,92 @@
+<html>
+  <head>
+    <style>
+      body { font-family: Arial, sans-serif; color: #333; font-size: 14px; }
+    </style>
+  </head>
+  <body>
+    <p>Cordial saludo,</p>
+    <p>El instructor <strong>{{instructorName}}</strong> ha modificado y reenviado la solicitud de formacion complementaria que habia sido rechazada. A continuacion se muestran los datos completos actualizados de la solicitud.</p>
+
+    <p><strong>Datos de la Solicitud</strong></p>
+    <p>
+      Numero de solicitud: {{numeroSolicitud}}<br>
+      Instructor: {{instructorName}}<br>
+      Fecha de reenvio: {{resubmitDate}}
+    </p>
+
+    <p><strong>Datos del Curso</strong></p>
+    <p>
+      Curso: {{courseName}}<br>
+      Codigo: {{courseCode}}<br>
+      Version: {{courseVersion}}<br>
+      Duracion maxima (horas): {{prfDuracionMaxima}}<br>
+      Tipo de programa: {{tipoPrograma}}<br>
+      Tipo de poblacion: {{tipoPoblacion}}
+    </p>
+
+    <p><strong>Fechas del Programa</strong></p>
+    <p>
+      Fecha de inicio: {{fechaInicio}}<br>
+      Fecha de finalizacion: {{fechaFin}}<br>
+      Fecha de inscripcion: {{fechaInscripcion}}<br>
+      Matricula inicio: {{fechaMatriculaInicio}}<br>
+      Matricula fin: {{fechaMatriculaFin}}
+    </p>
+
+    <p><strong>Ubicacion</strong></p>
+    <p>
+      Municipio: {{municipio}}
+      {{#if vereda}}<br>Vereda: {{vereda}}{{/if}}<br>
+      Direccion: {{direccion}}
+      {{#if ambienteNombre}}<br>Ambiente: {{ambienteNombre}}{{/if}}
+      {{#if ambienteDireccion}}<br>Direccion ambiente: {{ambienteDireccion}}{{/if}}
+    </p>
+
+    {{#if nombreEmpresa}}
+    <p><strong>Empresa Asociada</strong></p>
+    <p>
+      Nombre empresa: {{nombreEmpresa}}
+      {{#if nitEmpresa}}<br>NIT empresa: {{nitEmpresa}}{{/if}}
+      {{#if contactoEmpresa}}<br>Contacto empresa: {{contactoEmpresa}}{{/if}}
+      {{#if telefonoEmpresa}}<br>Telefono empresa: {{telefonoEmpresa}}{{/if}}
+    </p>
+    {{/if}}
+
+    <p><strong>Aprendices y Requisitos</strong></p>
+    <p>
+      No. Aprendices: {{numAprendices}}
+      {{#if requisitosIngreso}}<br>Requisitos de ingreso: {{requisitosIngreso}}{{/if}}
+      {{#if recursosNecesarios}}<br>Recursos necesarios: {{recursosNecesarios}}{{/if}}
+      {{#if proyectoAsociado}}<br>Proyecto asociado: {{proyectoAsociado}}{{/if}}
+    </p>
+
+    {{#if competencias}}
+    <p><strong>Competencias</strong></p>
+    {{#each competencias}}
+    <p>
+      {{nombre}}
+      {{#if codigo}} (Codigo: {{codigo}}){{/if}}
+      {{#if horas}} — {{horas}} horas{{/if}}
+      {{#if criterios}}<br>Criterios: {{#each criterios}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}{{/if}}
+    </p>
+    {{/each}}
+    {{/if}}
+
+    {{#if resultados}}
+    <p><strong>Resultados de Aprendizaje</strong></p>
+    {{#each resultados}}
+    <p>- {{this}}</p>
+    {{/each}}
+    {{/if}}
+
+    {{#if supervisorNombre}}
+    <p><strong>Supervisor</strong></p>
+    <p>Nombre supervisor: {{supervisorNombre}}</p>
+    {{/if}}
+
+    <p>Por favor ingrese al sistema para revisar y aprobar o rechazar la solicitud modificada.</p>
+
+    <p style="font-size: 12px; color: #666;">Este mensaje fue enviado automaticamente por el sistema REPORA - SENA. No responda a este correo.</p>
+  </body>
+</html>

@@ -1,6 +1,7 @@
 /**
  * @typedef {Object} ComplementaryCatalog
  * @property {number} prfCodigo - Código del programa
+ * @property {string} prfCodigoStr - Código del programa como String (conserva ceros a la izquierda, para búsqueda literal)
  * @property {number} prfVersion - Versión del programa
  * @property {string} codVer - Código versión compuesto
  * @property {string} tipoFormacion - Tipo de formación
@@ -37,6 +38,12 @@ const ComplementaryCatalogSquema = new Schema(
       type: Number,
       unique: true,
       required: true,
+    },
+    // Código del programa como String (conserva ceros a la izquierda, ej: "00122").
+    // Solo para búsqueda literal; el campo prfCodigo (Number) sigue siendo la fuente de verdad.
+    prfCodigoStr: {
+      type: String,
+      default: "",
     },
     prfVersion: {
       type: Number,

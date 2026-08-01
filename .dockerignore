@@ -12,3 +12,8 @@ public/uploads
 *.log
 .vscode
 .idea
+
+
+.env
+
+uploads

@@ -2,24 +2,33 @@ import fs from "fs";
 import { google } from "googleapis";
 import { uploadFileLocal, deleteFileLocal } from "./filesLocal.js";
 
-const apiKey = `./utils/uploadFiles/${process.env.GOOGLE_DRIVE_API_KEY}`;
-
-const SCOPE = "https://www.googleapis.com/auth/drive";
-
 // Storage type switch: "drive" or "local" (default: local)
 const STORAGE_TYPE = process.env.STORAGE_TYPE?.toLowerCase() || "local";
 
 async function authorize() {
-  const auth = new google.auth.JWT({
-    keyFile: apiKey,
-    scopes: SCOPE,
-    email: apiKey.client_email,
-    key: apiKey.private_key,
+  const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
+  const refreshToken = process.env.GOOGLE_OAUTH_REFRESH_TOKEN;
+
+  console.log("[DRIVE] auth method: OAuth2");
+  console.log("[DRIVE] client_id present:", !!clientId);
+  console.log("[DRIVE] refresh_token present:", !!refreshToken);
+
+  const auth = new google.auth.OAuth2(clientId, clientSecret);
+  auth.setCredentials({
+    refresh_token: refreshToken,
+    scope: "https://www.googleapis.com/auth/drive.file",
   });
 
-  await auth.authorize();
-
-  return auth;
+  try {
+    const token = await auth.getAccessToken();
+    console.log("[DRIVE] auth OK - access token obtained");
+    return auth;
+  } catch (err) {
+    console.error("[DRIVE] auth FAILED:", err.message);
+    console.error("[DRIVE] auth error code:", err.code);
+    throw err;
+  }
 }
 
 //eliminar una imagen de drive
@@ -34,11 +43,13 @@ export async function deleteFile(drive, fileId) {
   }
 }
 
-//buscar si ya existe la carpeta
-async function findFolder(drive, name) {
+//buscar si ya existe la carpeta dentro de un padre específico
+async function findFolder(drive, name, parentId) {
   return new Promise((resolve, reject) => {
-    let query =
-      "mimeType='application/vnd.google-apps.folder' and name='" + name + "'";
+    let query = `mimeType='application/vnd.google-apps.folder' and name='${name}' and trashed=false`;
+    if (parentId) {
+      query += ` and '${parentId}' in parents`;
+    }
     drive.files.list(
       {
         q: query,
@@ -46,7 +57,6 @@ async function findFolder(drive, name) {
       },
       function (err, res) {
         if (err) {
-          // Handle error
           console.error(err);
           reject(err);
         } else {
@@ -57,13 +67,16 @@ async function findFolder(drive, name) {
   });
 }
 
-//crear carpeta en caso de no existir
-async function createFolder(drive, nameFolder) {
+//crear carpeta dentro de un padre específico
+async function createFolder(drive, nameFolder, parentId) {
   return new Promise((resolve, reject) => {
     let fileMetadata = {
       name: nameFolder,
       mimeType: "application/vnd.google-apps.folder",
     };
+    if (parentId) {
+      fileMetadata.parents = [parentId];
+    }
     drive.files.create(
       {
         resource: fileMetadata,
@@ -71,7 +84,6 @@ async function createFolder(drive, nameFolder) {
       },
       function (err, file) {
         if (err) {
-          // Handle error
           console.error(err);
           reject(err);
         } else {
@@ -124,13 +136,30 @@ export async function uploadFile(
     const auth = await authorize();
 
     const drive = google.drive({ version: "v3", auth });
-    const foldersDrive = (await findFolder(drive, nameFolder)) || [];
 
-    //validar si los nombres de las carpetas osn exactamente iguales
+    // Determinar el parent directo de las carpetas de coordinación
+    // Si CENTER_NAME está definido: ROOT > CENTER_NAME > nameFolder
+    // Si no:                        ROOT > nameFolder
+    const rootFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
+    const centerName = process.env.CENTER_NAME;
+
+    let coordParentId = rootFolderId;
+
+    if (centerName) {
+      const centerFolders = (await findFolder(drive, centerName, rootFolderId)) || [];
+      let centerFolder = centerFolders.find((f) => f.name === centerName);
+      if (!centerFolder) {
+        centerFolder = await createFolder(drive, centerName, rootFolderId);
+      }
+      coordParentId = centerFolder.id;
+    }
+
+    const foldersDrive = (await findFolder(drive, nameFolder, coordParentId)) || [];
+
     let folder = foldersDrive.find((folder) => folder.name === nameFolder);
 
     if (!folder) {
-      folder = await createFolder(drive, nameFolder);
+      folder = await createFolder(drive, nameFolder, coordParentId);
       for (const email of emailsFolder) {
         await givePermission(drive, folder.id, email);
       }
@@ -171,7 +200,9 @@ export async function uploadFile(
       url,
     };
   } catch (error) {
-    console.log(error);
+    console.error("[DRIVE] uploadFile error:", error.message);
+    console.error("[DRIVE] uploadFile code:", error.code);
+    console.error("[DRIVE] uploadFile stack:", error.stack);
     throw new Error(error);
   }
 }

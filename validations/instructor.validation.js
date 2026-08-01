@@ -187,6 +187,17 @@ instructorVali.validateHeaders = [
   validateFields,
 ];
 
+// Validador para GET /instructors con búsqueda server-side (autocomplete).
+// Compatible hacia atras: si no llega q, el controlador responde como hoy.
+instructorVali.validateInstrQuery = [
+  check("q").optional().isString().withMessage("q debe ser una cadena"),
+  check("limit").optional().isInt({ min: 1 }).withMessage("limit debe ser un entero mayor o igual a 1"),
+  check("token").custom(async (token) => {
+    await validateToken(token, false);
+  }),
+  validateFields,
+];
+
 instructorVali.validatetokenloginInstru= [
   check("token").custom(async (token) => {
     await validateTokenInst(token);

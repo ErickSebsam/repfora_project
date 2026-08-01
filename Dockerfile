@@ -1,5 +1,5 @@
 # Usamos la versión Slim (basada en Debian) en lugar de Alpine
-FROM node:20-slim
+FROM node:22-slim
 
 # Instalamos OpenSSL y MongoDB Database Tools (mongodump, mongorestore)
 # y limpiamos la caché de apt para mantener la imagen pequeña.
@@ -11,8 +11,10 @@ RUN apt-get update && \
     apt-get install -y mongodb-database-tools && \
     rm -rf /var/lib/apt/lists/*
 
+
 # Instalamos las librerías de Python requeridas
 RUN pip3 install --no-cache-dir --break-system-packages pdfplumber requests
+
 
 # Establecemos el directorio de trabajo
 WORKDIR /app
@@ -34,7 +36,7 @@ RUN echo "Listando contenido de la carpeta actual:" && ls -la && echo "Listando 
 
 
 # Creamos los directorios necesarios
-RUN mkdir -p public downloads tmp clients
+RUN mkdir -p public downloads tmp clients /var/www/repfora/uploads
 
 # Exponemos el puerto
 EXPOSE 3000
