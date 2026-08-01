@@ -6,6 +6,7 @@ const CONFIG = {
   headless: false,
   slowMo: 150,
   timeout: 60000,
+  debug: true, 
 };
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -29,7 +30,6 @@ async function obtenerFestivosColombia(year) {
 
     const { data } = await response.json();
 
-    // La API devuelve "2026-07-20", lo convertimos a "20/07/2026"
     const festivosFormateados = data.map((item) => {
       const [y, m, d] = item.date.split("-");
       return `${d}/${m}/${y}`;
@@ -43,10 +43,6 @@ async function obtenerFestivosColombia(year) {
   }
 }
 
-// Registra UN evento (una serie de la colección "schedules", ya recortada
-// al mes actual) dentro de SOFIA. Recibe un browser ya abierto y crea su
-// propio contexto/página, para que si este evento falla no arrastre a los
-// demás eventos del mismo run.
 async function registrarEventoEnSofia(browser, datosEvento) {
   const context = await browser.newContext({
     viewport: { width: 1440, height: 900 },
@@ -79,7 +75,7 @@ async function registrarEventoEnSofia(browser, datosEvento) {
 
     await page.waitForSelector("#wrapper");
     logger.success("Login exitoso");
-    await sleep(4000);
+    await sleep(1000);
 
     // =====================================
     // 2. ROL: GESTIÓN DESARROLLO CURRICULAR (Value 17)
@@ -90,7 +86,7 @@ async function registrarEventoEnSofia(browser, datosEvento) {
     await selectRol.waitFor({ state: "visible", timeout: 10000 });
     await selectRol.selectOption("17");
 
-    await sleep(4000);
+    await sleep(1000);
     logger.success("Rol seleccionado con éxito");
 
     // =====================================
@@ -99,16 +95,16 @@ async function registrarEventoEnSofia(browser, datosEvento) {
     logger.info("Desplegando árbol de navegación...");
 
     await page.locator('span.menuPrimario', { hasText: 'Gestión de Ambientes' }).click();
-    await sleep(1500);
+    await sleep(1000);
 
     await page.locator('a', { hasText: 'Gestion Ambientes' }).click();
-    await sleep(1500);
+    await sleep(1000);
 
     await page.locator('a', { hasText: 'Gestión de Planeación y Programación' }).click();
-    await sleep(1500);
+    await sleep(1000);
 
     await page.locator('a[id="722211Opcion"]').click();
-    await sleep(5000);
+    await sleep(1000);
 
     // =====================================
     // 4. ENGANCHAR IFRAME CONTENIDO
@@ -141,7 +137,7 @@ async function registrarEventoEnSofia(browser, datosEvento) {
       timeout: 15000,
     });
 
-    await sleep(3000);
+    await sleep(1000);
 
     let verdaderoFrameFicha = page
       .frames()
@@ -174,7 +170,7 @@ async function registrarEventoEnSofia(browser, datosEvento) {
       .first();
 
     await botonConsultarFicha.click();
-    await sleep(3000);
+    await sleep(1000);
 
     // =====================================
     // 8. SELECCIONAR LA FICHA DE LA TABLA
@@ -186,7 +182,7 @@ async function registrarEventoEnSofia(browser, datosEvento) {
     await botonSeleccionarFicha.waitFor({ state: "visible", timeout: 10000 });
     await botonSeleccionarFicha.click();
 
-    await sleep(4000);
+    await sleep(1000);
 
     // =====================================
     // 9. CONSULTAR PROGRAMACIONES DE AMBIENTE
@@ -199,19 +195,31 @@ async function registrarEventoEnSofia(browser, datosEvento) {
     await btnConsultarProg.click();
 
     // =====================================
-    // 10. SELECCIONAR "CREAR EVENTO"
+    // 10. SELECCIONAR "CREAR EVENTO" EN LA FICHA VIGENTE (CON AGENDA)
     // =====================================
-    const botonCrearEvento = frameContenido
-      .locator('table[id*="dtprogramacionesDeAmbiente"] img[alt="Crear Evento"], table[id*="dtprogramacionesDeAmbiente"] img[title="Crear Evento"]')
+    logger.info("Filtrando la programación activa que contiene el botón de Agenda...");
+
+    const filaVigente = frameContenido
+      .locator('table[id*="dtprogramacionesDeAmbiente"] tbody tr')
+      .filter({
+        has: frameContenido.locator('img[title="Agenda"], img[alt="Agenda"]')
+      })
       .first();
 
-    await botonCrearEvento.waitFor({ state: "visible", timeout: 20000 });
+    await filaVigente.waitFor({ state: "visible", timeout: 20000 });
+
+    const botonCrearEvento = filaVigente
+      .locator('img[alt="Crear Evento"], img[title="Crear Evento"]')
+      .first();
+
+    await botonCrearEvento.waitFor({ state: "visible", timeout: 10000 });
     await botonCrearEvento.click();
+    logger.success("Hicimos clic en Crear Evento de la programación activa.");
 
     // =====================================
     // 11. ESPERAR Y RE-ENGANCHAR EL IFRAME
     // =====================================
-    await sleep(5000);
+    await sleep(1000);
 
     const frameEvento = page.frames().find((f) => f.name() === "contenido");
     if (!frameEvento) {
@@ -255,11 +263,15 @@ async function registrarEventoEnSofia(browser, datosEvento) {
       }
     }
 
+    // HORA INICIO
     const inputHoraInicio = frameEvento.locator('#horaInicio');
+    await inputHoraInicio.clear();
     await inputHoraInicio.fill(datosEvento.horaInicio);
     await inputHoraInicio.press("Tab");
 
+    // HORA FIN
     const inputHoraFin = frameEvento.locator('#horaFin');
+    await inputHoraFin.clear();
     await inputHoraFin.fill(datosEvento.horaFin);
     await inputHoraFin.press("Tab");
 
@@ -279,14 +291,12 @@ async function registrarEventoEnSofia(browser, datosEvento) {
 
     const tablaHorarios = frameEvento.locator('table[id*="dthorariosEvento"]').first();
     await tablaHorarios.waitFor({ state: "visible", timeout: 15000 });
-    await sleep(2000);
+    await sleep(1000);
 
     // =====================================
     // 15. FILTRAR Y ELIMINAR DÍAS FESTIVOS (API DINÁMICA)
     // =====================================
-    // Año extraído dinámicamente de la fecha de inicio del evento (dd/mm/yyyy)
     const anioEvento = datosEvento.fechaInicio.split("/")[2];
-
     const festivosOficiales = await obtenerFestivosColombia(anioEvento);
 
     logger.info("Revisando la grilla para eliminar días festivos oficiales...");
@@ -300,7 +310,7 @@ async function registrarEventoEnSofia(browser, datosEvento) {
         const enlacePagina = frameEvento.locator(`a[id*="dsEventosidx${numPagina}"]`);
         if (await enlacePagina.isVisible()) {
           await enlacePagina.click();
-          await sleep(3000);
+          await sleep(1000);
         }
       }
 
@@ -324,7 +334,7 @@ async function registrarEventoEnSofia(browser, datosEvento) {
 
             if (await btnEliminar.isVisible()) {
               await btnEliminar.click();
-              await sleep(3000);
+              await sleep(1000);
               logger.success(`Sesión del ${fechaTexto} eliminada.`);
             }
           }
@@ -333,16 +343,23 @@ async function registrarEventoEnSofia(browser, datosEvento) {
     }
 
     logger.success(`Evento sincronizado correctamente | Ficha: ${datosEvento.ficha}`);
-  } finally {
-    // await context.close();
-    await page.pause();
+    
+    await context.close();
+
+  } catch (error) {
+    logger.error(`Ocurrió un error con la ficha ${datosEvento.ficha}:`, error.message);
+
+    if (CONFIG.debug) {
+      logger.warn("Modo DEBUG activo: Pausando ejecución para inspeccionar en el navegador...");
+      await page.pause();
+    }
+
+    await context.close().catch(() => {});
+
+    throw error;
   }
 }
 
-// Punto de entrada usado por cron.js y cronService.js.
-// Trae todas las series de "schedules" que se solapan con el mes actual
-// (ya recortadas a los límites del mes) y las registra una por una en SOFIA.
-// Si un evento falla, se registra el error y se sigue con los demás.
 export async function ejecutarSincronizacionEvento() {
   logger.info("Cargando eventos del mes actual desde base de datos...");
   const eventosDelMes = await obtenerProgramacionesMesActual();
@@ -364,8 +381,7 @@ export async function ejecutarSincronizacionEvento() {
       try {
         await registrarEventoEnSofia(browser, datosEvento);
       } catch (error) {
-        logger.error(`Error registrando el evento de la ficha ${datosEvento.ficha}:`, error);
-        errores.push({ idSchedule: datosEvento.idSchedule, ficha: datosEvento.ficha, error });
+        errores.push({ idSchedule: datosEvento.idSchedule, ficha: datosEvento.ficha, error: error.message });
       }
     }
   } finally {
