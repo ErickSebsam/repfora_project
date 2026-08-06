@@ -216,7 +216,7 @@ frontend/
 utils/uploadFiles/*.json
 
 # Migration scripts (local only)
-scripts/
+# scripts/
 
 # Ignorar credenciales y llaves de Google
 uploads/credenciales/
